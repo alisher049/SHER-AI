@@ -131,6 +131,8 @@ export default function App() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [language, setLanguage] = useState("ur");
+  const t = language === "ur" ? {welcome:"SHER AI میں خوش آمدید", signupSub:"اپنا اکاؤنٹ بنائیں اور اپنا پاس ورڈ خود رکھیں۔", loginSub:"اپنے Gmail اور پاس ورڈ سے لاگ اِن کریں۔", email:"Gmail ایڈریس", password:"اپنا پاس ورڈ", confirm:"پاس ورڈ دوبارہ لکھیں", placeholder:"کم از کم 8 حروف یا نمبر", confirmPlaceholder:"پاس ورڈ کی تصدیق", show:"پاس ورڈ دکھائیں", hide:"پاس ورڈ چھپائیں", showConfirm:"دوبارہ لکھا پاس ورڈ دکھائیں", hideConfirm:"دوبارہ لکھا پاس ورڈ چھپائیں", signup:"اکاؤنٹ بنائیں", login:"لاگ اِن کریں", have:"پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں", new:"نیا اکاؤنٹ بنانا ہے؟ سائن اَپ کریں", invalid:"درست Gmail ایڈریس لکھیں، مثلاً name@gmail.com۔", short:"پاس ورڈ کم از کم 8 حروف یا نمبروں کا ہونا چاہیے۔", mismatch:"دونوں پاس ورڈ ایک جیسے نہیں ہیں۔", language:"English"} : {welcome:"Welcome to SHER AI", signupSub:"Create your account and choose your own password.", loginSub:"Log in with your Gmail and password.", email:"Gmail address", password:"Your password", confirm:"Confirm password", placeholder:"At least 8 letters or numbers", confirmPlaceholder:"Re-enter your password", show:"Show password", hide:"Hide password", showConfirm:"Show confirmation", hideConfirm:"Hide confirmation", signup:"Create account", login:"Log in", have:"Already have an account? Log in", new:"Need an account? Sign up", invalid:"Enter a valid Gmail address, for example name@gmail.com.", short:"Password must be at least 8 characters.", mismatch:"The passwords do not match.", language:"اردو"};
   const [mode, setMode] = useState("signup");
   const [busy, setBusy] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
@@ -147,9 +149,9 @@ export default function App() {
     event.preventDefault();
     if (!supabase || busy) return;
     const cleanEmail = email.trim().toLowerCase();
-    if (!/^[A-Z0-9._%+-]+@gmail\.com$/i.test(cleanEmail)) { setAuthError("صرف درست Gmail ایڈریس لکھیں۔"); return; }
-    if (password.length < 8) { setAuthError("پاس ورڈ کم از کم 8 حروف یا نمبروں کا ہونا چاہیے۔"); return; }
-    if (mode === "signup" && password !== confirmPassword) { setAuthError("دونوں پاس ورڈ ایک جیسے نہیں ہیں۔"); return; }
+    if (!/^[^\s@]+@gmail\.com$/i.test(cleanEmail)) { setAuthError(t.invalid); return; }
+    if (password.length < 8) { setAuthError(t.short); return; }
+    if (mode === "signup" && password !== confirmPassword) { setAuthError(t.mismatch); return; }
     setBusy(true); setAuthError(""); setAuthMessage("");
     try {
       if (mode === "signup") {
@@ -173,25 +175,26 @@ export default function App() {
   }
 
   if (!authReady) return <main className="auth-shell"><section className="auth-card"><div className="brain">🧠</div><h1>SHER AI</h1><p>لوڈ ہو رہا ہے…</p></section></main>;
-  if (!session) return <main className="auth-shell" dir="rtl">
+  if (!session) return <main className="auth-shell" dir={language === "ur" ? "rtl" : "ltr"}>
     <section className="auth-card">
+      <button className="text-button" type="button" onClick={() => setLanguage(v => v === "ur" ? "en" : "ur")}>{t.language}</button>
       <div className="brain auth-brain">🧠</div><div className="kicker">SHER AI ACCOUNT</div>
-      <h1>SHER AI میں خوش آمدید</h1>
-      <p className="auth-subtitle">{mode === "signup" ? "اپنا اکاؤنٹ بنائیں اور اپنا پاس ورڈ خود رکھیں۔" : "اپنے Gmail اور پاس ورڈ سے لاگ اِن کریں۔"}</p>
+      <h1>{t.welcome}</h1>
+      <p className="auth-subtitle">{mode === "signup" ? t.signupSub : t.loginSub}</p>
       {!supabase ? <div className="notice">سائن اَپ ابھی فعال نہیں ہوا۔ منتظم کو Supabase کی سیٹنگز شامل کرنی ہوں گی۔</div> :
       <form onSubmit={submitAuth} className="auth-form">
-        <label htmlFor="auth-email">Gmail ایڈریس</label>
+        <label htmlFor="auth-email">{t.email}</label>
         <input id="auth-email" type="email" inputMode="email" autoComplete="email" dir="ltr" value={email} onChange={e=>setEmail(e.target.value)} placeholder="yourname@gmail.com" required />
-        <label htmlFor="auth-password">اپنا پاس ورڈ</label>
-        <input id="auth-password" type={showPassword ? "text" : "password"} autoComplete={mode === "signup" ? "new-password" : "current-password"} dir="ltr" minLength="8" value={password} onChange={e=>setPassword(e.target.value)} placeholder="کم از کم 8 حروف یا نمبر" required />
-        <button className="text-button" type="button" onClick={()=>setShowPassword(v=>!v)}>{showPassword ? "پاس ورڈ چھپائیں" : "پاس ورڈ دکھائیں"}</button>
+        <label htmlFor="auth-password">{t.password}</label>
+        <input id="auth-password" type={showPassword ? "text" : "password"} autoComplete={mode === "signup" ? "new-password" : "current-password"} dir="ltr" minLength="8" value={password} onChange={e=>setPassword(e.target.value)} placeholder={t.placeholder} required />
+        <button className="text-button" type="button" onClick={()=>setShowPassword(v=>!v)}>{showPassword ? t.hide : t.show}</button>
         {mode === "signup" && <>
-          <label htmlFor="auth-confirm-password">پاس ورڈ دوبارہ لکھیں</label>
-          <input id="auth-confirm-password" type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" dir="ltr" minLength="8" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="پاس ورڈ کی تصدیق" required />
-          <button className="text-button" type="button" onClick={()=>setShowConfirmPassword(v=>!v)}>{showConfirmPassword ? "دوبارہ لکھا پاس ورڈ چھپائیں" : "دوبارہ لکھا پاس ورڈ دکھائیں"}</button>
+          <label htmlFor="auth-confirm-password">{t.confirm}</label>
+          <input id="auth-confirm-password" type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" dir="ltr" minLength="8" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder={t.confirmPlaceholder} required />
+          <button className="text-button" type="button" onClick={()=>setShowConfirmPassword(v=>!v)}>{showConfirmPassword ? t.hideConfirm : t.showConfirm}</button>
         </>}
-        <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? "براہِ کرم انتظار کریں…" : mode === "signup" ? "اکاؤنٹ بنائیں" : "لاگ اِن کریں"}</button>
-        <button className="text-button" type="button" onClick={()=>{setMode(mode === "signup" ? "login" : "signup");setAuthError("");setAuthMessage("");setPassword("");setConfirmPassword("");}}>{mode === "signup" ? "پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں" : "نیا اکاؤنٹ بنانا ہے؟ سائن اَپ کریں"}</button>
+        <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? (language === "ur" ? "براہِ کرم انتظار کریں…" : "Please wait…") : mode === "signup" ? t.signup : t.login}</button>
+        <button className="text-button" type="button" onClick={()=>{setMode(mode === "signup" ? "login" : "signup");setAuthError("");setAuthMessage("");setPassword("");setConfirmPassword("");}}>{mode === "signup" ? t.have : t.new}</button>
       </form>}
       {authMessage && <div className="auth-success" role="status">{authMessage}</div>}
       {authError && <div className="notice" role="alert">{authError}</div>}
