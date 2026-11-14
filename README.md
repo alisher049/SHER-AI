@@ -1,6 +1,6 @@
 # SHER AI
 
-**Build any app in 3 steps.** SHER AI is a mobile-first app-builder starter with a ChatGPT-powered assistant connection.
+**Build any app in 3 steps.** SHER AI is a mobile-first app-builder starter with a keyless Puter.js AI assistant connection.
 
 ## Current status
 
@@ -14,20 +14,13 @@ The repository contains a React/Vite frontend, a server-side ChatGPT API route, 
 
 ### ChatGPT assistant
 
-The app includes a **ChatGPT** screen at `/api/chat` and an **AI source generator** at `/api/generate`. The generator returns a starter project file set which the app packages into a ZIP in the browser. The OpenAI API key is read only from the server environment variable `OPENAI_API_KEY`; it is never placed in frontend JavaScript or the Android app.
+The app includes a **SHER AI** chat screen and an **AI source generator**. Both now call Puter.js directly from the browser using `puter.ai.chat()`; no OpenAI, Gemini, or other developer API key is required. The source generator packages the AI-generated starter files into a ZIP in the browser.
 
-Default model: `gpt-6-luna`. Override it with the server environment variable `OPENAI_MODEL` if needed.
+## Keyless AI connection (Puter.js)
 
-## Deploy the ChatGPT service
+SHER AI loads the official Puter.js browser SDK from `https://js.puter.com/v2/`. Users may be asked by Puter to authorize/sign in so that Puter can provide AI access. Under Puter's User-Pays model, the app developer does not add an API key or pay for each user's AI requests; each user is responsible for their own Puter usage and any limits or paid overages shown by Puter. This is not unlimited free AI for every user.
 
-1. Import this GitHub repository into Vercel and deploy it.
-2. In the Vercel project settings, add the environment variable `OPENAI_API_KEY` with your OpenAI API key. Optionally add `OPENAI_MODEL`.
-3. Redeploy after adding the environment variable.
-4. Open the deployed website and select **ChatGPT** to test the assistant.
-
-For an Android APK, set the GitHub Actions repository variable `VITE_API_BASE_URL` to the deployed Vercel origin (for example, `https://your-project.vercel.app`) before building. This tells the installed APK where the server-side chat endpoint lives. The URL is not a secret; the API key remains on Vercel.
-
-**Important:** OpenAI API usage is billed separately from a ChatGPT subscription and may have usage limits. Keep billing limits enabled. This first endpoint is a starter and is not yet protected by user accounts or durable per-user rate limiting; do not publish it widely until authentication and abuse protection are added.
+No `OPENAI_API_KEY`, `GEMINI_API_KEY`, or `PUTER_AUTH_TOKEN` is required in Vercel, GitHub Actions, frontend variables, or the APK. Keep Supabase only for SHER AI's existing Gmail/password sign-in.
 
 ## Run locally
 
@@ -36,24 +29,24 @@ npm install
 npm run dev
 ```
 
-The Vercel API route requires a Vercel-compatible runtime for local testing (for example, the Vercel CLI). A plain Vite dev server serves the frontend but does not itself execute `api/chat.js`.
+Puter.js AI requires an internet connection and the Puter SDK to load. The AI chat and project generator work from the browser; Supabase remains responsible for SHER AI account sign-in.
 
 ## Android APK
 
 Run the **Build SHER AI Android APK** workflow from the Actions tab, or push a change to configured paths on `main`. When successful, download the `sher-ai-debug-apk` artifact from the workflow run.
 
-The workflow currently produces a **debug APK** for testing, not a signed Play Store release. For ChatGPT to work in that APK, set the `VITE_API_BASE_URL` Actions variable as described above and trigger a fresh build.
+The workflow currently produces a **debug APK** for testing, not a signed Play Store release. For Puter.js AI to work in that APK, the device needs internet access and the embedded browser must be able to load the Puter.js SDK.
 
 ## Technology
 
 - React + Vite frontend
 - Capacitor Android wrapper
-- OpenAI Responses API through a server-side Vercel Function
+- Puter.js AI through the browser SDK (no developer API key)
 - GitHub Actions cloud APK build workflow
 
 ## Important limitations
 
-- ChatGPT assistant requests are implemented, but they require a deployed server and a valid OpenAI API key.
+- AI requests use Puter.js and require internet access plus any Puter user authorization/usage limits.
 - The AI source generator creates a starter project ZIP, not a production-ready application. It does not automatically compile arbitrary user ideas into APKs yet. Generated source code must be reviewed, tested, and may need backend services or further development.
 - APK builds require GitHub Actions runner availability and may be subject to account usage limits.
 - Truly unlimited chats, uploads, image generation, or video generation cannot be promised on a zero-cost infrastructure plan. Provider quotas, storage, and compute have costs.
