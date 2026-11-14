@@ -36,10 +36,10 @@ function AppContent({ accessToken, onSignOut }) {
         `App name: ${appName.trim() || "My New App"}`,
         `Target platform: ${platform}`,
         `User idea: ${idea.trim()}`
-      ].join("\\n\\n");
+      ].join("\n\n");
       const aiResult = await window.puter.ai.chat(prompt);
       const outputText = typeof aiResult === "string" ? aiResult : aiResult?.message?.content ?? aiResult?.text ?? "";
-      const cleaned = outputText.replace(/^\\s*```(?:json)?\\s*/i, "").replace(/\\s*```\\s*$/, "");
+      const cleaned = outputText.replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
       const data = JSON.parse(cleaned);
       if (!data.files || typeof data.files !== "object" || Array.isArray(data.files) || !Object.keys(data.files).length) throw new Error("AI did not return project files. Please try again.");
       const zip = new JSZip();
@@ -82,7 +82,7 @@ function AppContent({ accessToken, onSignOut }) {
         "Be accurate, concise and honest. Never claim an app, APK, upload or external action was completed unless it actually was.",
         ...nextMessages.map(message => `${message.role === "user" ? "User" : "Assistant"}: ${message.content}`),
         "Assistant:"
-      ].join("\\n\\n");
+      ].join("\n\n");
       const aiResult = await window.puter.ai.chat(prompt);
       const answer = typeof aiResult === "string" ? aiResult : aiResult?.message?.content ?? aiResult?.text ?? "";
       if (!answer) throw new Error("SHER AI کو خالی جواب ملا۔ دوبارہ کوشش کریں۔");
