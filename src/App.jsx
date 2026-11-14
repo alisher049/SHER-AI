@@ -32,7 +32,7 @@ async function downloadProject(project) {
   folder.file("package.json", JSON.stringify({
     name: project.slug, version: "1.0.0", private: true, type: "module",
     scripts: { dev: "vite", build: "vite build", preview: "vite preview" },
-    dependencies: { "@vitejs/plugin-react": "^4.4.1", vite: "^6.3.5, react: "^19.1.0", "react-dom": "^19.1.0" }
+    dependencies: { "@vitejs/plugin-react": "^4.4.1", vite: "^6.3.5", react: "^19.1.0", "react-dom": "^19.1.0" }
   }, null, 2));
   folder.file("index.html", '<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>' + project.name + '</title></head><body><div id="root"></div><script type="module" src="/src/main.jsx"></script></body></html>');
   folder.file("src/main.jsx", 'import React from "react"; import { createRoot } from "react-dom/client"; import App from "./App.jsx"; import "./style.css"; createRoot(document.getElementById("root")).render(<App />);');
