@@ -97,11 +97,11 @@ function AppContent({ accessToken, onSignOut }) {
   return <main className="shell">
     <header className="topbar">
       <div className="brand"><div className="brain">🧠</div><div><strong>SHER AI</strong><small>YOUR THREE-STEP APP BUILDER</small></div></div>
-      <div className="top-actions"><button className={view === "chat" ? "mode-button selected" : "mode-button"} onClick={() => setView(view === "chat" ? "builder" : "chat")}>{view === "chat" ? "← App Builder" : "✦ ChatGPT"}</button><button className="signout-button" onClick={onSignOut}>خروج</button></div>
+      <div className="top-actions"><button className={view === "chat" ? "mode-button selected" : "mode-button"} onClick={() => setView(view === "chat" ? "builder" : "chat")}>{view === "chat" ? "← App Builder" : "✦ AI Chat"}</button><button className="signout-button" onClick={onSignOut}>خروج</button></div>
     </header>
 
     {view === "chat" ? <section className="chat-panel">
-      <div className="chat-heading"><div className="chat-avatar">✦</div><div><div className="kicker">SHER AI ASSISTANT</div><h1>ChatGPT</h1><p className="muted">Ask questions, plan your app, or get help in Urdu and English.</p></div></div>
+      <div className="chat-heading"><div className="chat-avatar">✦</div><div><div className="kicker">SHER AI ASSISTANT</div><h1>SHER AI</h1><p className="muted">Ask questions, plan your app, or get help in Urdu and English.</p></div></div>
       <div className="chat-messages" aria-live="polite">
         {chatMessages.length === 0 && <div className="chat-welcome"><b>Assalam-o-alaikum! 👋</b><p>Main SHER AI ka assistant hoon. Aap apne app ka idea batayein ya koi sawal poochhein.</p></div>}
         {chatMessages.map((message, index) => <div className={message.role === "user" ? "chat-bubble user" : "chat-bubble assistant"} key={index}><span>{message.role === "user" ? "You" : "SHER AI"}</span><p>{message.content}</p></div>)}
