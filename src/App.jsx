@@ -71,7 +71,7 @@ function AppContent({ accessToken, onSignOut }) {
       const apiBase = import.meta.env.VITE_API_BASE_URL || "";
       const response = await fetch(apiBase ? `${apiBase.replace(/\/$/, "")}/api/chat` : "/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}` },
         body: JSON.stringify({ messages: nextMessages })
       });
       const data = await response.json().catch(() => ({}));
@@ -144,7 +144,7 @@ export default function App() {
     event.preventDefault();
     if (!supabase || busy) return;
     const cleanEmail = email.trim().toLowerCase();
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(cleanEmail)) { setAuthError("درست Gmail ایڈریس لکھیں۔"); return; }
+    if (!/^[A-Z0-9._%+-]+@gmail\.com$/i.test(cleanEmail)) { setAuthError("صرف درست Gmail ایڈریس لکھیں۔"); return; }
     setBusy(true); setAuthError(""); setAuthMessage("");
     try {
       const { error } = await supabase.auth.signInWithOtp({ email: cleanEmail, options: { shouldCreateUser: true } });
@@ -158,7 +158,7 @@ export default function App() {
   async function confirmCode(event) {
     event.preventDefault();
     if (!supabase || busy) return;
-    if (!/^\\d{6}$/.test(code.trim())) { setAuthError("6 ہندسوں کا تصدیقی کوڈ درج کریں۔"); return; }
+    if (!/^\d{6}$/.test(code.trim())) { setAuthError("6 ہندسوں کا تصدیقی کوڈ درج کریں۔"); return; }
     setBusy(true); setAuthError(""); setAuthMessage("");
     try {
       const { data, error } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: code.trim(), type: "email" });
@@ -183,7 +183,7 @@ export default function App() {
         </form> : <form onSubmit={confirmCode} className="auth-form">
           <p className="auth-subtitle"><b dir="ltr">{email}</b> پر بھیجا گیا کوڈ درج کریں۔</p>
           <label htmlFor="auth-code">6 ہندسوں کا تصدیقی کوڈ</label>
-          <input id="auth-code" type="text" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength="6" value={code} onChange={e=>setCode(e.target.value.replace(/\\D/g,"").slice(0,6))} placeholder="123456" required />
+          <input id="auth-code" type="text" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength="6" value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} placeholder="123456" required />
           <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? "تصدیق ہو رہی ہے…" : "کوڈ کی تصدیق کریں"}</button>
           <button className="text-button" type="button" onClick={()=>{setStage("email");setCode("");setAuthError("");}}>ای میل تبدیل کریں</button>
         </form>}
