@@ -75,7 +75,7 @@ function AppContent({ accessToken, onSignOut }) {
         body: JSON.stringify({ messages: nextMessages })
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "ChatGPT service is not available.");
+      if (!response.ok) throw new Error(data.error || "SHER AI service is not available.");
       setChatMessages([...nextMessages, { role: "assistant", content: data.answer }].slice(-12));
     } catch (error) {
       setChatError(error.message || "Could not reach SHER AI. Please try again.");
