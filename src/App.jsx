@@ -132,6 +132,23 @@ export default function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [language, setLanguage] = useState("ur");
+  const [installPrompt, setInstallPrompt] = useState(null);
+
+  useEffect(() => {
+    const captureInstall = (event) => {
+      event.preventDefault();
+      setInstallPrompt(event);
+    };
+    window.addEventListener("beforeinstallprompt", captureInstall);
+    return () => window.removeEventListener("beforeinstallprompt", captureInstall);
+  }, []);
+
+  async function installApp() {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    await installPrompt.userChoice;
+    setInstallPrompt(null);
+  }
   const t = language === "ur" ? {welcome:"SHER AI میں خوش آمدید", signupSub:"اپنا اکاؤنٹ بنائیں اور اپنا پاس ورڈ خود رکھیں۔", loginSub:"اپنے Gmail اور پاس ورڈ سے لاگ اِن کریں۔", email:"Gmail ایڈریس", password:"اپنا پاس ورڈ", confirm:"پاس ورڈ دوبارہ لکھیں", placeholder:"کم از کم 8 حروف یا نمبر", confirmPlaceholder:"پاس ورڈ کی تصدیق", show:"پاس ورڈ دکھائیں", hide:"پاس ورڈ چھپائیں", showConfirm:"دوبارہ لکھا پاس ورڈ دکھائیں", hideConfirm:"دوبارہ لکھا پاس ورڈ چھپائیں", signup:"اکاؤنٹ بنائیں", login:"لاگ اِن کریں", have:"پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں", new:"نیا اکاؤنٹ بنانا ہے؟ سائن اَپ کریں", invalid:"درست Gmail ایڈریس لکھیں، مثلاً name@gmail.com۔", short:"پاس ورڈ کم از کم 8 حروف یا نمبروں کا ہونا چاہیے۔", mismatch:"دونوں پاس ورڈ ایک جیسے نہیں ہیں۔", language:"English"} : {welcome:"Welcome to SHER AI", signupSub:"Create your account and choose your own password.", loginSub:"Log in with your Gmail and password.", email:"Gmail address", password:"Your password", confirm:"Confirm password", placeholder:"At least 8 letters or numbers", confirmPlaceholder:"Re-enter your password", show:"Show password", hide:"Hide password", showConfirm:"Show confirmation", hideConfirm:"Hide confirmation", signup:"Create account", login:"Log in", have:"Already have an account? Log in", new:"Need an account? Sign up", invalid:"Enter a valid Gmail address, for example name@gmail.com.", short:"Password must be at least 8 characters.", mismatch:"The passwords do not match.", language:"اردو"};
   const [mode, setMode] = useState("signup");
   const [busy, setBusy] = useState(false);
@@ -179,6 +196,7 @@ export default function App() {
   if (!session) return <main className="auth-shell" dir={language === "ur" ? "rtl" : "ltr"}>
     <>
     <div className="corner-tools">
+      {installPrompt && <button className="corner-tool language-tool" type="button" onClick={installApp}>{language === "ur" ? "ایپ انسٹال کریں" : "Install app"}</button>}
       <button className="corner-tool" type="button" onClick={() => window.location.reload()} aria-label="Refresh">↻</button>
       <button className="corner-tool language-tool" type="button" onClick={() => setLanguage(v => v === "ur" ? "en" : "ur")}>{t.language}</button>
     </div>
@@ -203,7 +221,7 @@ export default function App() {
       </form>}
       {authMessage && <div className="auth-success" role="status">{authMessage}</div>}
       {authError && <div className="notice" role="alert">{authError}</div>}
-      <p className="auth-footnote">آپ کا پاس ورڈ ای میل نہیں کیا جاتا۔ اسے محفوظ طریقے سے اکاؤنٹ کے ساتھ رکھا جاتا ہے۔</p>
+      <p className="auth-footnote">آپ کا پاس ورڈ ای میل نہیں کیا جاتا۔ اسے محفوظ طریقے سے اکاؤنٹ کے ساتھ رکھا جاتا ہے۔<br/>ایپ انسٹال کرنے کے لیے Chrome کے ⋮ مینو میں “Install app” یا “Add to Home screen” منتخب کریں۔</p>
     </section>
     </>
   </main>;
