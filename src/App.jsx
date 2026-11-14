@@ -26,15 +26,22 @@ function AppContent({ accessToken, onSignOut }) {
     setGenerating(true);
     setNotice("");
     try {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-      const response = await fetch(apiBase ? `${apiBase.replace(/\/$/, "")}/api/generate` : "/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}` },
-        body: JSON.stringify({ appName: appName.trim() || "My New App", platform, idea: idea.trim() })
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "AI code generation is not available.");
-      if (!data.files || typeof data.files !== "object" || !Object.keys(data.files).length) throw new Error("AI did not return project files. Please try again.");
+      if (!window.puter?.ai?.chat) throw new Error("Puter AI ابھی لوڈ نہیں ہوا۔ انٹرنیٹ چیک کریں اور دوبارہ کوشش کریں۔");
+      const prompt = [
+        "You are the senior engineer for SHER AI. Generate a runnable, responsive starter project.",
+        "Return ONLY valid JSON: {\"files\": {\"relative/path\": \"complete file contents\"}}.",
+        "Prefer plain HTML, CSS and JavaScript. Include index.html, styles.css, app.js and README.md where suitable.",
+        "No markdown fences, secrets, API keys, binary files, absolute paths, or paths containing ..",
+        "Make core interactions functional. Limit to 10 files and 18000 total characters.",
+        `App name: ${appName.trim() || "My New App"}`,
+        `Target platform: ${platform}`,
+        `User idea: ${idea.trim()}`
+      ].join("\\n\\n");
+      const aiResult = await window.puter.ai.chat(prompt);
+      const outputText = typeof aiResult === "string" ? aiResult : aiResult?.message?.content ?? aiResult?.text ?? "";
+      const cleaned = outputText.replace(/^\\s*```(?:json)?\\s*/i, "").replace(/\\s*```\\s*$/, "");
+      const data = JSON.parse(cleaned);
+      if (!data.files || typeof data.files !== "object" || Array.isArray(data.files) || !Object.keys(data.files).length) throw new Error("AI did not return project files. Please try again.");
       const zip = new JSZip();
       Object.entries(data.files).forEach(([path, content]) => {
         if (typeof content === "string" && !path.startsWith("/") && !path.split("/").includes("..")) zip.file(path, content);
@@ -68,15 +75,18 @@ function AppContent({ accessToken, onSignOut }) {
     setChatError("");
     setChatLoading(true);
     try {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-      const response = await fetch(apiBase ? `${apiBase.replace(/\/$/, "")}/api/chat` : "/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}` },
-        body: JSON.stringify({ messages: nextMessages })
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "SHER AI service is not available.");
-      setChatMessages([...nextMessages, { role: "assistant", content: data.answer }].slice(-12));
+      if (!window.puter?.ai?.chat) throw new Error("Puter AI ابھی لوڈ نہیں ہوا۔ انٹرنیٹ چیک کریں اور دوبارہ کوشش کریں۔");
+      const prompt = [
+        "You are SHER AI, a helpful AI assistant inside a mobile app builder.",
+        "Help users plan and build apps. Reply in the language the user uses, especially Urdu or Roman Urdu when appropriate.",
+        "Be accurate, concise and honest. Never claim an app, APK, upload or external action was completed unless it actually was.",
+        ...nextMessages.map(message => `${message.role === "user" ? "User" : "Assistant"}: ${message.content}`),
+        "Assistant:"
+      ].join("\\n\\n");
+      const aiResult = await window.puter.ai.chat(prompt);
+      const answer = typeof aiResult === "string" ? aiResult : aiResult?.message?.content ?? aiResult?.text ?? "";
+      if (!answer) throw new Error("SHER AI کو خالی جواب ملا۔ دوبارہ کوشش کریں۔");
+      setChatMessages([...nextMessages, { role: "assistant", content: answer }].slice(-12));
     } catch (error) {
       setChatError(error.message || "Could not reach SHER AI. Please try again.");
     } finally {
@@ -102,7 +112,7 @@ function AppContent({ accessToken, onSignOut }) {
         <textarea rows="2" maxLength="4000" value={chatInput} onChange={event => setChatInput(event.target.value)} placeholder="Apna sawal yahan likhein..." aria-label="Your message" />
         <button className="primary" type="submit" disabled={chatLoading || !chatInput.trim()}>{chatLoading ? "Sending…" : "Send ↑"}</button>
       </form>
-      <p className="chat-footnote">AI replies use the SHER AI server connection. Usage may be subject to API limits and charges.</p>
+      <p className="chat-footnote">AI is provided through Puter.js. Puter may ask each user to authorize access; usage follows Puter’s user-pays plan and limits.</p>
     </section> : <>
       <section className="hero"><div className="eyebrow">IDEA TO ANDROID APP</div><h1>Build an app.<br/><span>In 3 simple steps.</span></h1><p>Describe your idea, make it yours, and prepare your project for an Android APK.</p></section>
       <nav className="steps" aria-label="Creation steps">{steps.map((label, i) => <div className={`step ${i === step ? "active" : ""} ${i < step ? "done" : ""}`} key={label}><b>{i < step ? "✓" : `0${i+1}`}</b><span>{label}</span></div>)}</nav>
