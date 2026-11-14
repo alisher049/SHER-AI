@@ -22,7 +22,7 @@ jobs:
           distribution: temurin
           java-version: "21"
       - run: npm install
-      - run: npm run build
+      - name: Build web app\n        run: npm run build\n        env:\n          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
       - run: npx cap add android
       - run: npx cap sync android
       - name: Build debug APK
