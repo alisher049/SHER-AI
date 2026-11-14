@@ -14,7 +14,24 @@ export default function App() {
   }
   function back() { setNotice(""); setStep((s) => Math.max(0, s - 1)); }
   function build() {
-    setNotice("Project brief prepared. AI code generation and APK compilation still need a configured AI provider and build service.");
+    const project = {
+      appName: appName.trim() || "My New App",
+      platform,
+      idea: idea.trim(),
+      createdAt: new Date().toISOString(),
+      product: "SHER AI"
+    };
+    const blob = new Blob([JSON.stringify(project, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const safeName = (project.appName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "my-app");
+    link.href = url;
+    link.download = `${safeName}-project-brief.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setNotice("Your project brief has been exported. AI code generation and APK compilation are the next development step.");
   }
 
   return <main className="shell">
