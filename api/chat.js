@@ -1,5 +1,15 @@
 const MAX_MESSAGES = 12;
-const MAX_MESSAGE_CHARS = 4000;\nconst requestLog = new Map();\n\nfunction overRateLimit(key) {\n  const now = Date.now();\n  const recent = (requestLog.get(key) || []).filter(time => now - time < 60_000);\n  if (recent.length >= 10) return true;\n  recent.push(now);\n  requestLog.set(key, recent);\n  return false;\n}
+const MAX_MESSAGE_CHARS = 4000;
+const requestLog = new Map();
+
+function overRateLimit(key) {
+  const now = Date.now();
+  const recent = (requestLog.get(key) || []).filter(time => now - time < 60_000);
+  if (recent.length >= 10) return true;
+  recent.push(now);
+  requestLog.set(key, recent);
+  return false;
+}
 
 function json(res, status, body) {
   res.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
@@ -13,7 +23,12 @@ export default async function handler(req, res) {
     return json(res, 405, { error: "Only POST requests are allowed." });
   }
 
-  const clientIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || "unknown";\n  if (overRateLimit(clientIp)) {\n    return json(res, 429, { error: "Too many messages. Please wait a minute and try again." });\n  }\n\n  const apiKey = process.env.OPENAI_API_KEY;
+  const clientIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || "unknown";
+  if (overRateLimit(clientIp)) {
+    return json(res, 429, { error: "Too many messages. Please wait a minute and try again." });
+  }
+
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return json(res, 503, { error: "ChatGPT service is not configured yet. The server owner must add OPENAI_API_KEY." });
   }
@@ -64,7 +79,8 @@ export default async function handler(req, res) {
       .flatMap(item => item.content || [])
       .filter(part => part.type === "output_text")
       .map(part => part.text || "")
-      .join("\n")
+      .join("
+")
       .trim();
 
     if (!answer) return json(res, 502, { error: "The AI returned an empty response. Please try again." });
