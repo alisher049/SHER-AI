@@ -145,7 +145,7 @@ export default function App() {
     event.preventDefault();
     if (!supabase || busy) return;
     const cleanEmail = email.trim().toLowerCase();
-    if (!/^[A-Z0-9._%+-]+@gmail\\.com$/i.test(cleanEmail)) { setAuthError("صرف درست Gmail ایڈریس لکھیں۔"); return; }
+    if (!/^[A-Z0-9._%+-]+@gmail\.com$/i.test(cleanEmail)) { setAuthError("صرف درست Gmail ایڈریس لکھیں۔"); return; }
     if (password.length < 8) { setAuthError("پاس ورڈ کم از کم 8 حروف یا نمبروں کا ہونا چاہیے۔"); return; }
     if (mode === "signup" && password !== confirmPassword) { setAuthError("دونوں پاس ورڈ ایک جیسے نہیں ہیں۔"); return; }
     setBusy(true); setAuthError(""); setAuthMessage("");
