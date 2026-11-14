@@ -1,3 +1,4 @@
+// SHER AI AI-source generation endpoint. API credentials remain server-side.
 const MAX_IDEA_CHARS = 6000;
 const requestLog = new Map();
 
