@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "src/**"
+      - "src/**"\n      - "api/**"\n      - "vercel.json"
       - "index.html"
       - "package.json"
       - "capacitor.config.json"
