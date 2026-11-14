@@ -1,6 +1,6 @@
-// SHER AI AI-source generation endpoint. API credentials remain server-side.
 import { requireUser } from "./_auth.js";
 import { generateWithGemini } from "./_gemini.js";
+
 const MAX_IDEA_CHARS = 6000;
 const requestLog = new Map();
 
@@ -27,8 +27,9 @@ export default async function handler(req, res) {
 
   const user = await requireUser(req);
   if (!user) return json(res, 401, { error: "Please sign in with your email to generate projects." });
-  const clientIp = user.id;
-  if (overRateLimit(clientIp)) return json(res, 429, { error: "Too many generation requests. Please wait a minute and try again." });
+  if (overRateLimit(user.id)) {
+    return json(res, 429, { error: "Too many generation requests. Please wait a minute and try again." });
+  }
 
   const { idea, appName, platform } = req.body || {};
   if (typeof idea !== "string" || !idea.trim() || idea.length > MAX_IDEA_CHARS) {
@@ -52,8 +53,40 @@ export default async function handler(req, res) {
         "Use accessible labels, responsive mobile-first styling, and sensible empty/error states.",
         "Respect the requested platform and app name."
       ].join(" "),
-      contents: [{ role: "user", parts: [{ text: `App name: ${safeName}\nTarget: ${safePlatform}\nUser idea:\n${idea.trim()}` }] }],
+      contents: [{
+        role: "user",
+        parts: [{ text: `App name: ${safeName}\nTarget: ${safePlatform}\nUser idea:\n${idea.trim()}` }]
+      }],
       maxOutputTokens: 6500,
       jsonMode: true
     });
 
+    let parsed;
+    try {
+      parsed = JSON.parse(outputText);
+    } catch {
+      return json(res, 502, { error: "Gemini returned an invalid project format. Please try again." });
+    }
+
+    if (!parsed.files || typeof parsed.files !== "object" || Array.isArray(parsed.files)) {
+      return json(res, 502, { error: "Gemini did not return a valid set of project files." });
+    }
+
+    const files = {};
+    let totalChars = 0;
+    for (const [path, value] of Object.entries(parsed.files).slice(0, 10)) {
+      if (typeof path !== "string" || path.startsWith("/") || path.split("/").includes("..") ||
+          typeof value !== "string" || value.length > 12000) continue;
+      totalChars += value.length;
+      if (totalChars > 18000) break;
+      files[path] = value;
+    }
+
+    if (!Object.keys(files).length) {
+      return json(res, 502, { error: "Gemini generated no usable source files. Please try a simpler idea." });
+    }
+    return json(res, 200, { files });
+  } catch (error) {
+    return json(res, error.status || 502, { error: error.message || "Could not connect to Gemini. Please try again." });
+  }
+}
