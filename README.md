@@ -58,3 +58,17 @@ The workflow currently produces a **debug APK** for testing, not a signed Play S
 - APK builds require GitHub Actions runner availability and may be subject to account usage limits.
 - Truly unlimited chats, uploads, image generation, or video generation cannot be promised on a zero-cost infrastructure plan. Provider quotas, storage, and compute have costs.
 - Never put private AI API keys in frontend code, Android assets, or source control.
+
+
+## Email sign-in (OTP)
+
+The app uses Supabase Auth email OTP. Users enter an email address and the 6-digit code sent to that inbox; no password is requested. Both `/api/chat` and `/api/generate` verify the Supabase access token before accepting requests.
+
+Required configuration:
+1. Create a Supabase project and enable the Email provider under Authentication → Providers.
+2. In Authentication → Email Templates, configure the email template to display the numeric token using `{{ .Token }}`. The app expects a 6-digit code.
+3. Add Vercel environment variables: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and the existing `OPENAI_API_KEY`.
+4. Add GitHub Actions repository **Variables**: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. These are public client settings; never put a Supabase service-role key in the app.
+5. Redeploy Vercel and rebuild the APK after setting the variables.
+
+Without these settings, sign-in stays locked and AI endpoints reject unauthenticated requests. Supabase email delivery may require custom SMTP for reliable production delivery.
