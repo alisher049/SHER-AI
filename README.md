@@ -60,13 +60,13 @@ The workflow currently produces a **debug APK** for testing, not a signed Play S
 - Never put private AI API keys in frontend code, Android assets, or source control.
 
 
-## Email sign-in (OTP)
+## Email and password sign-in
 
-The app uses Supabase Auth email OTP. Users enter an email address and the 6-digit code sent to that inbox; no password is requested. Both `/api/chat` and `/api/generate` verify the Supabase access token before accepting requests.
+SHER AI uses Supabase Auth with user-created passwords. Users sign up with a Gmail address, choose a password (minimum 8 characters), confirm it, and later log in with the same Gmail and password. The password is never sent by email. If Supabase email confirmation is enabled, Supabase may send a confirmation link; that email does not contain the user's password. Both `/api/chat` and `/api/generate` verify the Supabase access token before accepting requests.
 
 Required configuration:
-1. Create a Supabase project and enable the Email provider under Authentication → Providers.
-2. In Authentication → Email Templates, configure the email template to display the numeric token using `{{ .Token }}`. The app expects a 6-digit code.
+1. Create a Supabase project named **SHER AI** and enable the Email provider under Authentication → Providers.
+2. Configure the Supabase Email provider's confirmation setting according to the desired account-verification policy. Password sign-up and login are handled by Supabase Auth.
 3. Add Vercel environment variables: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and the existing `OPENAI_API_KEY`.
 4. Add GitHub Actions repository **Variables**: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. These are public client settings; never put a Supabase service-role key in the app.
 5. Redeploy Vercel and rebuild the APK after setting the variables.
