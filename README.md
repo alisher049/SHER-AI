@@ -72,3 +72,11 @@ Required configuration:
 5. Redeploy Vercel and rebuild the APK after setting the variables.
 
 Without these settings, sign-in stays locked and AI endpoints reject unauthenticated requests. Supabase email delivery may require custom SMTP for reliable production delivery.
+
+## Installable PWA
+
+SHER AI now includes a Progressive Web App manifest, an app icon, and a service worker. On supported mobile browsers, open the deployed HTTPS site and choose **Install app** or **Add to Home screen**. When the browser exposes its install prompt, SHER AI also shows an in-app install button on the sign-in screen.
+
+The service worker caches the app shell for basic offline launch and checks the network first for page navigations so newly deployed versions can be loaded. Browser-managed service-worker updates take effect as the browser refreshes or revisits the app. This PWA update path does not require users to download a new APK for web changes.
+
+**Important:** PWA installation does not itself deploy code. New features still need to be committed to this repository and successfully deployed by the hosting provider. The PWA can use those web updates without rebuilding the Android APK. Native Android-only changes still require a new APK build. The current Android workflow remains a debug APK workflow, not a signed Play Store release.
