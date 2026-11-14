@@ -148,8 +148,9 @@ export default function App() {
   async function submitAuth(event) {
     event.preventDefault();
     if (!supabase || busy) return;
-    const cleanEmail = email.trim().toLowerCase();
-    if (!/^[^\s@]+@gmail\.com$/i.test(cleanEmail)) { setAuthError(t.invalid); return; }
+    const cleanEmail = email.replace(/[\u200B-\u200D\uFEFF]/g, "").trim().toLowerCase();
+    if (!/^[a-z0-9.!#$%&\'*+/=?^_`{|}~-]+@gmail\.com$/i.test(cleanEmail)) { setAuthError(t.invalid); return; }
+    setEmail(cleanEmail);
     if (password.length < 8) { setAuthError(t.short); return; }
     if (mode === "signup" && password !== confirmPassword) { setAuthError(t.mismatch); return; }
     setBusy(true); setAuthError(""); setAuthMessage("");
