@@ -79,8 +79,7 @@ export default async function handler(req, res) {
       .flatMap(item => item.content || [])
       .filter(part => part.type === "output_text")
       .map(part => part.text || "")
-      .join("
-")
+      .join("\n")
       .trim();
 
     if (!answer) return json(res, 502, { error: "The AI returned an empty response. Please try again." });
