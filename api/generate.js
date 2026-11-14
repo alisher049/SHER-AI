@@ -1,4 +1,14 @@
 const MAX_IDEA_CHARS = 6000;
+const requestLog = new Map();
+
+function overRateLimit(key) {
+  const now = Date.now();
+  const recent = (requestLog.get(key) || []).filter(time => now - time < 60_000);
+  if (recent.length >= 3) return true;
+  recent.push(now);
+  requestLog.set(key, recent);
+  return false;
+}
 
 function json(res, status, body) {
   res.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
@@ -11,6 +21,9 @@ export default async function handler(req, res) {
     res.setHeader("Allow", "POST");
     return json(res, 405, { error: "Only POST requests are allowed." });
   }
+
+  const clientIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || "unknown";
+  if (overRateLimit(clientIp)) return json(res, 429, { error: "Too many generation requests. Please wait a minute and try again." });
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return json(res, 503, { error: "AI generation is not configured. The server owner must add OPENAI_API_KEY." });
