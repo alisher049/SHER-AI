@@ -1,44 +1,37 @@
 # SHER AI
 
-**Build any app in 3 steps.** SHER AI is a mobile-first app-builder starter: describe an idea, customize the project, and prepare a build.
+**Build an app in 3 steps.** SHER AI is a mobile-first app-builder starter.
 
-## Current status
+## Current features
 
-This repository now contains an early **frontend MVP scaffold** and a GitHub Actions workflow that attempts to package the web app as a debug Android APK. It is not yet a complete AI app generator.
+1. Describe an app idea in Urdu, Hindi, or English.
+2. Choose an app name and target platform.
+3. Download a ZIP containing an editable React + Vite starter project, a starter screen, CSS, README, and the original project brief.
 
-### Three-step product flow
-
-1. **Describe** — enter the app idea in Urdu, Hindi, or English.
-2. **Customize** — choose the app name and export target.
-3. **Build & export** — prepare a project and, after the AI generation service is connected, create an Android APK.
-
-## Technology
-
-- React + Vite frontend
-- Capacitor Android wrapper
-- GitHub Actions cloud build workflow
-- Planned backend: authenticated API, AI provider adapter, project generator, file storage, and build-job service
-
-## Run locally
+## Run SHER AI
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Android APK
+## Generated project
 
-Run the **Build SHER AI Android APK** workflow from the Actions tab, or push a change to the configured paths on `main`. When successful, download the `sher-ai-debug-apk` artifact from the workflow run.
+Extract the downloaded ZIP, open that folder in a development environment, then run `npm install` and `npm run dev`.
 
-The workflow currently produces a **debug APK** for testing, not a signed Play Store release.
+The current generator creates a usable starter scaffold and includes the user's description. It does **not** yet use a hosted AI model to implement every feature requested in the description. It also does not compile an APK from inside the app yet.
 
-## Important limitations
+## Android APK for SHER AI
 
-- AI-powered source-code generation is not connected yet. The current UI collects a project brief only.
-- APK builds require GitHub Actions runner availability and may be subject to account usage limits.
-- Truly unlimited chats, uploads, image generation, or video generation cannot be promised on a zero-cost infrastructure plan. Provider quotas, storage, compute, and abuse protection must be designed explicitly.
-- Never put private AI API keys in frontend code or commit them to this repository. Add them as repository Actions secrets or server-side environment variables when the backend is implemented.
+The GitHub Actions workflow attempts to build a debug APK. Run the workflow from the repository's Actions tab. If successful, download the `sher-ai-debug-apk` artifact from that run. A debug APK is for testing, not a signed Play Store release.
 
-## Security principles
+## Next engineering milestones
 
-Use server-side secrets, authenticated sessions, per-user project isolation, upload validation, rate limits, and explicit retention controls before launching publicly.
+- Connect a secure server-side AI provider adapter (never expose API keys in frontend code).
+- Turn generated app requirements into files using the AI backend.
+- Add isolated cloud build jobs for generated Android projects.
+- Add user accounts, private project storage, quotas, upload validation, and abuse protection.
+
+## Cost and security
+
+Unlimited AI usage, video generation, and file storage cannot be guaranteed on zero-cost infrastructure. Provider quotas, compute costs, storage, and rate limits must be handled before public launch. Keep all private API keys in server-side environment variables or repository secrets, never in browser code.
