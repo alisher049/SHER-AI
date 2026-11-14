@@ -80,3 +80,12 @@ SHER AI now includes a Progressive Web App manifest, an app icon, and a service 
 The service worker caches the app shell for basic offline launch and checks the network first for page navigations so newly deployed versions can be loaded. Browser-managed service-worker updates take effect as the browser refreshes or revisits the app. This PWA update path does not require users to download a new APK for web changes.
 
 **Important:** PWA installation does not itself deploy code. New features still need to be committed to this repository and successfully deployed by the hosting provider. The PWA can use those web updates without rebuilding the Android APK. Native Android-only changes still require a new APK build. The current Android workflow remains a debug APK workflow, not a signed Play Store release.
+
+
+## Free AI provider (Gemini)
+
+SHER AI chat and app generation use Google's Gemini API through server-side Vercel functions. The default model is `gemini-3.8-flash`. Create a key in [Google AI Studio](https://aistudio.google.com/apikey), then add it in Vercel → Project → Settings → Environment Variables as `GEMINI_API_KEY` and redeploy. Optionally set `GEMINI_MODEL` to a model available to your AI Studio project.
+
+The Gemini key must remain server-side: do not add it to `VITE_*` variables, frontend code, GitHub source, or the Android APK. The free tier has model-specific quotas and rate limits; requests may pause when those limits are reached. Review Google's current [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing) before production use.
+
+Supabase remains responsible for sign-in and user authentication. Its Project URL and Publishable Key are not AI provider credentials.
