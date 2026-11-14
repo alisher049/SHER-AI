@@ -1,37 +1,60 @@
 # SHER AI
 
-**Build an app in 3 steps.** SHER AI is a mobile-first app-builder starter.
+**Build any app in 3 steps.** SHER AI is a mobile-first app-builder starter with a ChatGPT-powered assistant connection.
 
-## Current features
+## Current status
 
-1. Describe an app idea in Urdu, Hindi, or English.
-2. Choose an app name and target platform.
-3. Download a ZIP containing an editable React + Vite starter project, a starter screen, CSS, README, and the original project brief.
+The repository contains a React/Vite frontend, a server-side ChatGPT API route, a Vercel deployment configuration, and a GitHub Actions workflow that attempts to package the web app as a debug Android APK.
 
-## Run SHER AI
+### Three-step product flow
+
+1. **Describe** — enter the app idea in Urdu, Hindi, or English.
+2. **Customize** — choose the app name and export target.
+3. **Build & export** — export the project brief; full source-code generation and APK build orchestration are still future work.
+
+### ChatGPT assistant
+
+The app now includes a **ChatGPT** screen. It sends conversation messages to `/api/chat`, and the server calls the OpenAI Responses API. The OpenAI API key is read only from the server environment variable `OPENAI_API_KEY`; it is never placed in frontend JavaScript or the Android app.
+
+Default model: `gpt-6-luna`. Override it with the server environment variable `OPENAI_MODEL` if needed.
+
+## Deploy the ChatGPT service
+
+1. Import this GitHub repository into Vercel and deploy it.
+2. In the Vercel project settings, add the environment variable `OPENAI_API_KEY` with your OpenAI API key. Optionally add `OPENAI_MODEL`.
+3. Redeploy after adding the environment variable.
+4. Open the deployed website and select **ChatGPT** to test the assistant.
+
+For an Android APK, set the GitHub Actions repository variable `VITE_API_BASE_URL` to the deployed Vercel origin (for example, `https://your-project.vercel.app`) before building. This tells the installed APK where the server-side chat endpoint lives. The URL is not a secret; the API key remains on Vercel.
+
+**Important:** OpenAI API usage is billed separately from a ChatGPT subscription and may have usage limits. Keep billing limits enabled. This first endpoint is a starter and is not yet protected by user accounts or durable per-user rate limiting; do not publish it widely until authentication and abuse protection are added.
+
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Generated project
+The Vercel API route requires a Vercel-compatible runtime for local testing (for example, the Vercel CLI). A plain Vite dev server serves the frontend but does not itself execute `api/chat.js`.
 
-Extract the downloaded ZIP, open that folder in a development environment, then run `npm install` and `npm run dev`.
+## Android APK
 
-The current generator creates a usable starter scaffold and includes the user's description. It does **not** yet use a hosted AI model to implement every feature requested in the description. It also does not compile an APK from inside the app yet.
+Run the **Build SHER AI Android APK** workflow from the Actions tab, or push a change to configured paths on `main`. When successful, download the `sher-ai-debug-apk` artifact from the workflow run.
 
-## Android APK for SHER AI
+The workflow currently produces a **debug APK** for testing, not a signed Play Store release. For ChatGPT to work in that APK, set the `VITE_API_BASE_URL` Actions variable as described above and trigger a fresh build.
 
-The GitHub Actions workflow attempts to build a debug APK. Run the workflow from the repository's Actions tab. If successful, download the `sher-ai-debug-apk` artifact from that run. A debug APK is for testing, not a signed Play Store release.
+## Technology
 
-## Next engineering milestones
+- React + Vite frontend
+- Capacitor Android wrapper
+- OpenAI Responses API through a server-side Vercel Function
+- GitHub Actions cloud APK build workflow
 
-- Connect a secure server-side AI provider adapter (never expose API keys in frontend code).
-- Turn generated app requirements into files using the AI backend.
-- Add isolated cloud build jobs for generated Android projects.
-- Add user accounts, private project storage, quotas, upload validation, and abuse protection.
+## Important limitations
 
-## Cost and security
-
-Unlimited AI usage, video generation, and file storage cannot be guaranteed on zero-cost infrastructure. Provider quotas, compute costs, storage, and rate limits must be handled before public launch. Keep all private API keys in server-side environment variables or repository secrets, never in browser code.
+- ChatGPT assistant requests are implemented, but they require a deployed server and a valid OpenAI API key.
+- The current app-builder flow exports a project brief only; it does not yet generate full app source code or compile arbitrary user apps.
+- APK builds require GitHub Actions runner availability and may be subject to account usage limits.
+- Truly unlimited chats, uploads, image generation, or video generation cannot be promised on a zero-cost infrastructure plan. Provider quotas, storage, and compute have costs.
+- Never put private AI API keys in frontend code, Android assets, or source control.
