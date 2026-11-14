@@ -43,7 +43,8 @@ export default function App() {
     setChatError("");
     setChatLoading(true);
     try {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || "";\n      const response = await fetch(apiBase ? `${apiBase.replace(/\\/$/, "")}/api/chat` : "/api/chat", {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+      const response = await fetch(apiBase ? `${apiBase.replace(/\\/$/, "")}/api/chat` : "/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: nextMessages })
