@@ -18,7 +18,7 @@ export default function App() {
   }
 
   return <main className="shell">
-    <header className="topbar"><div className="brand"><div className="brain">✳</div><div><strong>SHER AI</strong><small>YOUR THREE-STEP APP BUILDER</small></div></div><span className="status">MVP PREVIEW</span></header>
+    <header className="topbar"><div className="brand"><div className="brain">🧠</div><div><strong>SHER AI</strong><small>YOUR THREE-STEP APP BUILDER</small></div></div><span className="status">MVP PREVIEW</span></header>
     <section className="hero"><div className="eyebrow">IDEA TO ANDROID APP</div><h1>Build an app.<br/><span>In 3 simple steps.</span></h1><p>Describe your idea, make it yours, and prepare your project for an Android APK.</p></section>
     <nav className="steps" aria-label="Creation steps">{steps.map((label, i) => <div className={`step ${i === step ? "active" : ""} ${i < step ? "done" : ""}`} key={label}><b>{i < step ? "✓" : `0${i+1}`}</b><span>{label}</span></div>)}</nav>
     <section className="panel">
