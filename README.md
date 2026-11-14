@@ -10,11 +10,11 @@ The repository contains a React/Vite frontend, a server-side ChatGPT API route, 
 
 1. **Describe** — enter the app idea in Urdu, Hindi, or English.
 2. **Customize** — choose the app name and export target.
-3. **Build & export** — export the project brief; full source-code generation and APK build orchestration are still future work.
+3. **Build & export** — ask AI to generate a starter source project and download the files as a ZIP. The generated source still needs review and a separate build step to become an APK.
 
 ### ChatGPT assistant
 
-The app now includes a **ChatGPT** screen. It sends conversation messages to `/api/chat`, and the server calls the OpenAI Responses API. The OpenAI API key is read only from the server environment variable `OPENAI_API_KEY`; it is never placed in frontend JavaScript or the Android app.
+The app includes a **ChatGPT** screen at `/api/chat` and an **AI source generator** at `/api/generate`. The generator returns a starter project file set which the app packages into a ZIP in the browser. The OpenAI API key is read only from the server environment variable `OPENAI_API_KEY`; it is never placed in frontend JavaScript or the Android app.
 
 Default model: `gpt-6-luna`. Override it with the server environment variable `OPENAI_MODEL` if needed.
 
@@ -54,7 +54,7 @@ The workflow currently produces a **debug APK** for testing, not a signed Play S
 ## Important limitations
 
 - ChatGPT assistant requests are implemented, but they require a deployed server and a valid OpenAI API key.
-- The current app-builder flow exports a project brief only; it does not yet generate full app source code or compile arbitrary user apps.
+- The AI source generator creates a starter project ZIP, not a production-ready application. It does not automatically compile arbitrary user ideas into APKs yet. Generated source code must be reviewed, tested, and may need backend services or further development.
 - APK builds require GitHub Actions runner availability and may be subject to account usage limits.
 - Truly unlimited chats, uploads, image generation, or video generation cannot be promised on a zero-cost infrastructure plan. Provider quotas, storage, and compute have costs.
 - Never put private AI API keys in frontend code, Android assets, or source control.
