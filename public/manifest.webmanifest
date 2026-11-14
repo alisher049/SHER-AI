@@ -1,0 +1,22 @@
+{
+  "id": "/",
+  "name": "SHER AI — App Builder",
+  "short_name": "SHER AI",
+  "description": "Build your app in three simple steps.",
+  "lang": "ur",
+  "dir": "auto",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#08111f",
+  "theme_color": "#08111f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/sher-ai.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
