@@ -13,7 +13,7 @@ The three-step flow is a simple user experience; it does not mean every arbitrar
 ## System layers
 
 - **Mobile-first client:** React UI for idea capture, project review, progress, and downloads.
-- **API gateway:** authenticated endpoints; validates requests and never exposes provider credentials.
+- **API gateway:** the starter now includes a Vercel serverless `POST /api/chat` endpoint. It validates message count and size, calls the OpenAI Responses API, and reads the provider key from server environment variables. User authentication and durable per-user rate limiting remain to be implemented.
 - **AI orchestration service:** converts the brief into a structured product specification, asks for missing requirements, generates code in bounded stages, and runs repair cycles.
 - **Template and code-generation layer:** starts from vetted templates (for example, utility, catalog, booking, and chat apps) and applies generated modules.
 - **Project storage:** private per-user source bundles, metadata, and generated assets with retention controls.
