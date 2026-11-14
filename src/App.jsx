@@ -176,8 +176,12 @@ export default function App() {
 
   if (!authReady) return <main className="auth-shell"><section className="auth-card"><div className="brain">🧠</div><h1>SHER AI</h1><p>لوڈ ہو رہا ہے…</p></section></main>;
   if (!session) return <main className="auth-shell" dir={language === "ur" ? "rtl" : "ltr"}>
+    <>
+    <div className="corner-tools">
+      <button className="corner-tool" type="button" onClick={() => window.location.reload()} aria-label="Refresh">↻</button>
+      <button className="corner-tool language-tool" type="button" onClick={() => setLanguage(v => v === "ur" ? "en" : "ur")}>{t.language}</button>
+    </div>
     <section className="auth-card">
-      <button className="text-button" type="button" onClick={() => setLanguage(v => v === "ur" ? "en" : "ur")}>{t.language}</button>
       <div className="brain auth-brain">🧠</div><div className="kicker">SHER AI ACCOUNT</div>
       <h1>{t.welcome}</h1>
       <p className="auth-subtitle">{mode === "signup" ? t.signupSub : t.loginSub}</p>
@@ -200,6 +204,7 @@ export default function App() {
       {authError && <div className="notice" role="alert">{authError}</div>}
       <p className="auth-footnote">آپ کا پاس ورڈ ای میل نہیں کیا جاتا۔ اسے محفوظ طریقے سے اکاؤنٹ کے ساتھ رکھا جاتا ہے۔</p>
     </section>
+    </>
   </main>;
   return <AppContent accessToken={session.access_token} onSignOut={signOut} />;
 }
