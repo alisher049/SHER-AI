@@ -65,10 +65,10 @@ The workflow currently produces a **debug APK** for testing, not a signed Play S
 SHER AI uses Supabase Auth with user-created passwords. Users sign up with a Gmail address, choose a password (minimum 8 characters), confirm it, and later log in with the same Gmail and password. The password is never sent by email. If Supabase email confirmation is enabled, Supabase may send a confirmation link; that email does not contain the user's password. Both `/api/chat` and `/api/generate` verify the Supabase access token before accepting requests.
 
 Required configuration:
-1. Create a Supabase project named **SHER AI** and enable the Email provider under Authentication → Providers.
+1. Supabase project is connected: `https://hltlskzpwqrhiedmomfx.supabase.co`. The frontend has this project URL and its Publishable Key configured as public client settings. Confirm the Email provider is enabled under Authentication → Providers.
 2. Configure the Supabase Email provider's confirmation setting according to the desired account-verification policy. Password sign-up and login are handled by Supabase Auth.
-3. Add Vercel environment variables: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and the existing `OPENAI_API_KEY`.
-4. Add GitHub Actions repository **Variables**: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. These are public client settings; never put a Supabase service-role key in the app.
+3. In Vercel, add `SUPABASE_URL=https://hltlskzpwqrhiedmomfx.supabase.co`, `SUPABASE_ANON_KEY` with the Supabase Publishable Key, and the existing `OPENAI_API_KEY`. These Supabase values are public project settings; never use a service-role or secret key here.
+4. GitHub Actions already has safe fallback values for the SHER AI Supabase project. You may override them with repository Variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. Never put a Supabase service-role key in the app.
 5. Redeploy Vercel and rebuild the APK after setting the variables.
 
 Without these settings, sign-in stays locked and AI endpoints reject unauthenticated requests. Supabase email delivery may require custom SMTP for reliable production delivery.
