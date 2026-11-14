@@ -1,8 +1,9 @@
 import { useState } from "react";
 import JSZip from "jszip";
+import { createClient } from "@supabase/supabase-js";
 
 const steps = ["Describe", "Customize", "Build"];
-export default function App() {
+function AppContent({ accessToken, onSignOut }) {
   const [step, setStep] = useState(0);
   const [idea, setIdea] = useState("");
   const [appName, setAppName] = useState("My New App");
@@ -28,7 +29,7 @@ export default function App() {
       const apiBase = import.meta.env.VITE_API_BASE_URL || "";
       const response = await fetch(apiBase ? `${apiBase.replace(/\/$/, "")}/api/generate` : "/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}` },
         body: JSON.stringify({ appName: appName.trim() || "My New App", platform, idea: idea.trim() })
       });
       const data = await response.json().catch(() => ({}));
@@ -86,7 +87,7 @@ export default function App() {
   return <main className="shell">
     <header className="topbar">
       <div className="brand"><div className="brain">🧠</div><div><strong>SHER AI</strong><small>YOUR THREE-STEP APP BUILDER</small></div></div>
-      <button className={view === "chat" ? "mode-button selected" : "mode-button"} onClick={() => setView(view === "chat" ? "builder" : "chat")}>{view === "chat" ? "← App Builder" : "✦ ChatGPT"}</button>
+      <div className="top-actions"><button className={view === "chat" ? "mode-button selected" : "mode-button"} onClick={() => setView(view === "chat" ? "builder" : "chat")}>{view === "chat" ? "← App Builder" : "✦ ChatGPT"}</button><button className="signout-button" onClick={onSignOut}>خروج</button></div>
     </header>
 
     {view === "chat" ? <section className="chat-panel">
@@ -115,4 +116,81 @@ export default function App() {
     </>}
     <footer><span>SHER AI</span><span>Build boldly. Start simply.</span></footer>
   </main>;
+}
+
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+
+export default function App() {
+  const [session, setSession] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [stage, setStage] = useState("email");
+  const [busy, setBusy] = useState(false);
+  const [authMessage, setAuthMessage] = useState("");
+  const [authError, setAuthError] = useState("");
+
+  useEffect(() => {
+    if (!supabase) { setAuthReady(true); return; }
+    supabase.auth.getSession().then(({ data }) => { setSession(data.session); setAuthReady(true); });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  async function sendCode(event) {
+    event.preventDefault();
+    if (!supabase || busy) return;
+    const cleanEmail = email.trim().toLowerCase();
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(cleanEmail)) { setAuthError("درست Gmail ایڈریس لکھیں۔"); return; }
+    setBusy(true); setAuthError(""); setAuthMessage("");
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ email: cleanEmail, options: { shouldCreateUser: true } });
+      if (error) throw error;
+      setEmail(cleanEmail); setStage("code");
+      setAuthMessage("آپ کے ای میل پر 6 ہندسوں کا کوڈ بھیج دیا گیا ہے۔");
+    } catch (error) { setAuthError(error.message || "کوڈ نہیں بھیجا جا سکا۔ دوبارہ کوشش کریں۔"); }
+    finally { setBusy(false); }
+  }
+
+  async function confirmCode(event) {
+    event.preventDefault();
+    if (!supabase || busy) return;
+    if (!/^\\d{6}$/.test(code.trim())) { setAuthError("6 ہندسوں کا تصدیقی کوڈ درج کریں۔"); return; }
+    setBusy(true); setAuthError(""); setAuthMessage("");
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: code.trim(), type: "email" });
+      if (error) throw error;
+      setSession(data.session);
+    } catch { setAuthError("کوڈ غلط یا ختم ہو چکا ہے۔ نیا کوڈ منگوائیں۔"); }
+    finally { setBusy(false); }
+  }
+
+  async function signOut() { if (supabase) await supabase.auth.signOut(); setSession(null); setStage("email"); setCode(""); }
+
+  if (!authReady) return <main className="auth-shell"><section className="auth-card"><div className="brain">🧠</div><h1>SHER AI</h1><p>لوڈ ہو رہا ہے…</p></section></main>;
+  if (!session) return <main className="auth-shell" dir="rtl">
+    <section className="auth-card">
+      <div className="brain auth-brain">🧠</div><div className="kicker">SHER AI ACCOUNT</div>
+      <h1>SHER AI میں خوش آمدید</h1><p className="auth-subtitle">صرف Gmail اور تصدیقی کوڈ سے سائن اَپ کریں۔</p>
+      {!supabase ? <div className="notice">سائن اَپ ابھی فعال نہیں ہوا۔ منتظم کو Supabase کی سیٹنگز شامل کرنی ہوں گی۔</div> :
+        stage === "email" ? <form onSubmit={sendCode} className="auth-form">
+          <label htmlFor="auth-email">Gmail ایڈریس</label>
+          <input id="auth-email" type="email" inputMode="email" autoComplete="email" dir="ltr" value={email} onChange={e=>setEmail(e.target.value)} placeholder="yourname@gmail.com" required />
+          <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? "کوڈ بھیجا جا رہا ہے…" : "تصدیقی کوڈ بھیجیں"}</button>
+        </form> : <form onSubmit={confirmCode} className="auth-form">
+          <p className="auth-subtitle"><b dir="ltr">{email}</b> پر بھیجا گیا کوڈ درج کریں۔</p>
+          <label htmlFor="auth-code">6 ہندسوں کا تصدیقی کوڈ</label>
+          <input id="auth-code" type="text" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength="6" value={code} onChange={e=>setCode(e.target.value.replace(/\\D/g,"").slice(0,6))} placeholder="123456" required />
+          <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? "تصدیق ہو رہی ہے…" : "کوڈ کی تصدیق کریں"}</button>
+          <button className="text-button" type="button" onClick={()=>{setStage("email");setCode("");setAuthError("");}}>ای میل تبدیل کریں</button>
+        </form>}
+      {authMessage && <div className="auth-success" role="status">{authMessage}</div>}
+      {authError && <div className="notice" role="alert">{authError}</div>}
+      <p className="auth-footnote">ہم آپ کا Gmail پاس ورڈ نہیں مانگتے۔</p>
+    </section>
+  </main>;
+  return <AppContent accessToken={session.access_token} onSignOut={signOut} />;
 }
