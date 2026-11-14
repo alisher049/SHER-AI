@@ -1,0 +1,1 @@
+import type {CapacitorConfig} from '@capacitor/cli';const config:CapacitorConfig={appId:'com.sherai.assistant',appName:'SHER AI',webDir:'dist'};export default config;
