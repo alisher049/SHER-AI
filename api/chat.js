@@ -1,5 +1,5 @@
 import { requireUser } from "../lib/server/auth.js";
-import { generateWithGemini } from "./_gemini.js";
+import { generateWithGemini } from "../lib/server/gemini.js";
 
 function json(res, status, body) {
   res.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
