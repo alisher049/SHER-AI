@@ -129,6 +129,7 @@ function AppContent({ accessToken, onSignOut }) {
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://hltlskzpwqrhiedmomfx.supabase.co";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_EKo3T3p1J7vVYqMQdTN2oQ__Ig0O8N6";
 const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+const OWNER_EMAIL = "alishermeo049@gmail.com";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -164,8 +165,15 @@ export default function App() {
 
   useEffect(() => {
     if (!supabase) { setAuthReady(true); return; }
-    supabase.auth.getSession().then(({ data }) => { setSession(data.session); setAuthReady(true); });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session?.user?.email?.toLowerCase() === OWNER_EMAIL) setSession(data.session);
+      else if (data.session) await supabase.auth.signOut();
+      setAuthReady(true);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (nextSession?.user?.email?.toLowerCase() === OWNER_EMAIL) setSession(nextSession);
+      else setSession(null);
+    });
     return () => listener.subscription.unsubscribe();
   }, []);
 
@@ -174,6 +182,7 @@ export default function App() {
     if (!supabase || busy) return;
     const cleanEmail = email.replace(/[\u200B-\u200D\uFEFF]/g, "").trim().toLowerCase();
     if (!/^[a-z0-9.!#$%&\'*+/=?^_`{|}~-]+@gmail\.com$/i.test(cleanEmail)) { setAuthError(t.invalid); return; }
+    if (cleanEmail !== OWNER_EMAIL) { setAuthError("یہ SHER AI صرف مالک کے Gmail اکاؤنٹ کے لیے ہے۔"); return; }
     setEmail(cleanEmail);
     if (password.length < 8) { setAuthError(t.short); return; }
     if (mode === "signup" && password !== confirmPassword) { setAuthError(t.mismatch); return; }
