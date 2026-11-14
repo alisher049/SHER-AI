@@ -1,4 +1,4 @@
-import { requireUser } from "./_auth.js";
+import { requireUser } from "../lib/server/auth.js";
 import { generateWithGemini } from "./_gemini.js";
 
 function json(res, status, body) {
