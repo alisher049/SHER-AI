@@ -127,8 +127,9 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [authReady, setAuthReady] = useState(false);
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [stage, setStage] = useState("email");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [mode, setMode] = useState("signup");
   const [busy, setBusy] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
   const [authError, setAuthError] = useState("");
@@ -140,56 +141,57 @@ export default function App() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  async function sendCode(event) {
+  async function submitAuth(event) {
     event.preventDefault();
     if (!supabase || busy) return;
     const cleanEmail = email.trim().toLowerCase();
-    if (!/^[A-Z0-9._%+-]+@gmail\.com$/i.test(cleanEmail)) { setAuthError("صرف درست Gmail ایڈریس لکھیں۔"); return; }
+    if (!/^[A-Z0-9._%+-]+@gmail\\.com$/i.test(cleanEmail)) { setAuthError("صرف درست Gmail ایڈریس لکھیں۔"); return; }
+    if (password.length < 8) { setAuthError("پاس ورڈ کم از کم 8 حروف یا نمبروں کا ہونا چاہیے۔"); return; }
+    if (mode === "signup" && password !== confirmPassword) { setAuthError("دونوں پاس ورڈ ایک جیسے نہیں ہیں۔"); return; }
     setBusy(true); setAuthError(""); setAuthMessage("");
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email: cleanEmail, options: { shouldCreateUser: true } });
-      if (error) throw error;
-      setEmail(cleanEmail); setStage("code");
-      setAuthMessage("آپ کے ای میل پر 6 ہندسوں کا کوڈ بھیج دیا گیا ہے۔");
-    } catch (error) { setAuthError(error.message || "کوڈ نہیں بھیجا جا سکا۔ دوبارہ کوشش کریں۔"); }
-    finally { setBusy(false); }
+      if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({ email: cleanEmail, password });
+        if (error) throw error;
+        if (data.session) setSession(data.session);
+        else setAuthMessage("اکاؤنٹ بن گیا ہے۔ اگر Gmail تصدیق مانگے تو اپنے Inbox میں تصدیقی لنک کھولیں؛ پاس ورڈ ای میل نہیں کیا جائے گا۔");
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+        if (error) throw error;
+        setSession(data.session);
+      }
+    } catch (error) {
+      setAuthError(error.message || "اکاؤنٹ کی کارروائی مکمل نہیں ہو سکی۔ دوبارہ کوشش کریں۔");
+    } finally { setBusy(false); }
   }
 
-  async function confirmCode(event) {
-    event.preventDefault();
-    if (!supabase || busy) return;
-    if (!/^\d{6}$/.test(code.trim())) { setAuthError("6 ہندسوں کا تصدیقی کوڈ درج کریں۔"); return; }
-    setBusy(true); setAuthError(""); setAuthMessage("");
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: code.trim(), type: "email" });
-      if (error) throw error;
-      setSession(data.session);
-    } catch { setAuthError("کوڈ غلط یا ختم ہو چکا ہے۔ نیا کوڈ منگوائیں۔"); }
-    finally { setBusy(false); }
+  async function signOut() {
+    if (supabase) await supabase.auth.signOut();
+    setSession(null); setPassword(""); setConfirmPassword(""); setMode("signup");
   }
-
-  async function signOut() { if (supabase) await supabase.auth.signOut(); setSession(null); setStage("email"); setCode(""); }
 
   if (!authReady) return <main className="auth-shell"><section className="auth-card"><div className="brain">🧠</div><h1>SHER AI</h1><p>لوڈ ہو رہا ہے…</p></section></main>;
   if (!session) return <main className="auth-shell" dir="rtl">
     <section className="auth-card">
       <div className="brain auth-brain">🧠</div><div className="kicker">SHER AI ACCOUNT</div>
-      <h1>SHER AI میں خوش آمدید</h1><p className="auth-subtitle">صرف Gmail اور تصدیقی کوڈ سے سائن اَپ کریں۔</p>
+      <h1>SHER AI میں خوش آمدید</h1>
+      <p className="auth-subtitle">{mode === "signup" ? "اپنا اکاؤنٹ بنائیں اور اپنا پاس ورڈ خود رکھیں۔" : "اپنے Gmail اور پاس ورڈ سے لاگ اِن کریں۔"}</p>
       {!supabase ? <div className="notice">سائن اَپ ابھی فعال نہیں ہوا۔ منتظم کو Supabase کی سیٹنگز شامل کرنی ہوں گی۔</div> :
-        stage === "email" ? <form onSubmit={sendCode} className="auth-form">
-          <label htmlFor="auth-email">Gmail ایڈریس</label>
-          <input id="auth-email" type="email" inputMode="email" autoComplete="email" dir="ltr" value={email} onChange={e=>setEmail(e.target.value)} placeholder="yourname@gmail.com" required />
-          <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? "کوڈ بھیجا جا رہا ہے…" : "تصدیقی کوڈ بھیجیں"}</button>
-        </form> : <form onSubmit={confirmCode} className="auth-form">
-          <p className="auth-subtitle"><b dir="ltr">{email}</b> پر بھیجا گیا کوڈ درج کریں۔</p>
-          <label htmlFor="auth-code">6 ہندسوں کا تصدیقی کوڈ</label>
-          <input id="auth-code" type="text" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength="6" value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} placeholder="123456" required />
-          <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? "تصدیق ہو رہی ہے…" : "کوڈ کی تصدیق کریں"}</button>
-          <button className="text-button" type="button" onClick={()=>{setStage("email");setCode("");setAuthError("");}}>ای میل تبدیل کریں</button>
-        </form>}
+      <form onSubmit={submitAuth} className="auth-form">
+        <label htmlFor="auth-email">Gmail ایڈریس</label>
+        <input id="auth-email" type="email" inputMode="email" autoComplete="email" dir="ltr" value={email} onChange={e=>setEmail(e.target.value)} placeholder="yourname@gmail.com" required />
+        <label htmlFor="auth-password">اپنا پاس ورڈ</label>
+        <input id="auth-password" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} dir="ltr" minLength="8" value={password} onChange={e=>setPassword(e.target.value)} placeholder="کم از کم 8 حروف یا نمبر" required />
+        {mode === "signup" && <>
+          <label htmlFor="auth-confirm-password">پاس ورڈ دوبارہ لکھیں</label>
+          <input id="auth-confirm-password" type="password" autoComplete="new-password" dir="ltr" minLength="8" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="پاس ورڈ کی تصدیق" required />
+        </>}
+        <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? "براہِ کرم انتظار کریں…" : mode === "signup" ? "اکاؤنٹ بنائیں" : "لاگ اِن کریں"}</button>
+        <button className="text-button" type="button" onClick={()=>{setMode(mode === "signup" ? "login" : "signup");setAuthError("");setAuthMessage("");setPassword("");setConfirmPassword("");}}>{mode === "signup" ? "پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں" : "نیا اکاؤنٹ بنانا ہے؟ سائن اَپ کریں"}</button>
+      </form>}
       {authMessage && <div className="auth-success" role="status">{authMessage}</div>}
       {authError && <div className="notice" role="alert">{authError}</div>}
-      <p className="auth-footnote">ہم آپ کا Gmail پاس ورڈ نہیں مانگتے۔</p>
+      <p className="auth-footnote">آپ کا پاس ورڈ ای میل نہیں کیا جاتا۔ اسے محفوظ طریقے سے اکاؤنٹ کے ساتھ رکھا جاتا ہے۔</p>
     </section>
   </main>;
   return <AppContent accessToken={session.access_token} onSignOut={signOut} />;
