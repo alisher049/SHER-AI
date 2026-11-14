@@ -1,4 +1,5 @@
 // SHER AI AI-source generation endpoint. API credentials remain server-side.
+import { requireUser } from "./_auth.js";
 const MAX_IDEA_CHARS = 6000;
 const requestLog = new Map();
 
@@ -23,7 +24,9 @@ export default async function handler(req, res) {
     return json(res, 405, { error: "Only POST requests are allowed." });
   }
 
-  const clientIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || "unknown";
+  const user = await requireUser(req);
+  if (!user) return json(res, 401, { error: "Please sign in with your email to generate projects." });
+  const clientIp = user.id;
   if (overRateLimit(clientIp)) return json(res, 429, { error: "Too many generation requests. Please wait a minute and try again." });
 
   const apiKey = process.env.OPENAI_API_KEY;
