@@ -1,5 +1,6 @@
 import { requireUser } from "./_auth.js";
 import { generateWithGemini } from "./_gemini.js";
+
 const MAX_MESSAGES = 12;
 const MAX_MESSAGE_CHARS = 4000;
 const requestLog = new Map();
@@ -27,8 +28,7 @@ export default async function handler(req, res) {
 
   const user = await requireUser(req);
   if (!user) return json(res, 401, { error: "Please sign in with your email to use SHER AI." });
-  const clientIp = user.id;
-  if (overRateLimit(clientIp)) {
+  if (overRateLimit(user.id)) {
     return json(res, 429, { error: "Too many messages. Please wait a minute and try again." });
   }
 
@@ -58,4 +58,7 @@ export default async function handler(req, res) {
       maxOutputTokens: 1200
     });
     return json(res, 200, { answer });
-
+  } catch (error) {
+    return json(res, error.status || 502, { error: error.message || "Could not connect to Gemini. Please try again." });
+  }
+}
