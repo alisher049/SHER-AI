@@ -129,6 +129,8 @@ export default function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mode, setMode] = useState("signup");
   const [busy, setBusy] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
@@ -181,10 +183,12 @@ export default function App() {
         <label htmlFor="auth-email">Gmail ایڈریس</label>
         <input id="auth-email" type="email" inputMode="email" autoComplete="email" dir="ltr" value={email} onChange={e=>setEmail(e.target.value)} placeholder="yourname@gmail.com" required />
         <label htmlFor="auth-password">اپنا پاس ورڈ</label>
-        <input id="auth-password" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} dir="ltr" minLength="8" value={password} onChange={e=>setPassword(e.target.value)} placeholder="کم از کم 8 حروف یا نمبر" required />
+        <input id="auth-password" type={showPassword ? "text" : "password"} autoComplete={mode === "signup" ? "new-password" : "current-password"} dir="ltr" minLength="8" value={password} onChange={e=>setPassword(e.target.value)} placeholder="کم از کم 8 حروف یا نمبر" required />
+        <button className="text-button" type="button" onClick={()=>setShowPassword(v=>!v)}>{showPassword ? "پاس ورڈ چھپائیں" : "پاس ورڈ دکھائیں"}</button>
         {mode === "signup" && <>
           <label htmlFor="auth-confirm-password">پاس ورڈ دوبارہ لکھیں</label>
-          <input id="auth-confirm-password" type="password" autoComplete="new-password" dir="ltr" minLength="8" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="پاس ورڈ کی تصدیق" required />
+          <input id="auth-confirm-password" type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" dir="ltr" minLength="8" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="پاس ورڈ کی تصدیق" required />
+          <button className="text-button" type="button" onClick={()=>setShowConfirmPassword(v=>!v)}>{showConfirmPassword ? "دوبارہ لکھا پاس ورڈ چھپائیں" : "دوبارہ لکھا پاس ورڈ دکھائیں"}</button>
         </>}
         <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? "براہِ کرم انتظار کریں…" : mode === "signup" ? "اکاؤنٹ بنائیں" : "لاگ اِن کریں"}</button>
         <button className="text-button" type="button" onClick={()=>{setMode(mode === "signup" ? "login" : "signup");setAuthError("");setAuthMessage("");setPassword("");setConfirmPassword("");}}>{mode === "signup" ? "پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں" : "نیا اکاؤنٹ بنانا ہے؟ سائن اَپ کریں"}</button>
