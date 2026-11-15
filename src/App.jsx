@@ -359,6 +359,8 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
   const [authError, setAuthError] = useState("");
+  const [otpPending, setOtpPending] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
 
   useEffect(() => {
     if (!supabase) { setAuthReady(true); return; }
@@ -373,6 +375,32 @@ export default function App() {
     });
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  async function verifyEmailCode(event) {
+    event.preventDefault();
+    if (!supabase || busy) return;
+    const token = otpCode.trim();
+    if (!/^\d{6}$/.test(token)) { setAuthError("Gmail verification code must be six digits."); return; }
+    setBusy(true); setAuthError(""); setAuthMessage("");
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token, type: "signup" });
+      if (error) throw error;
+      if (data.session?.user?.email?.toLowerCase() === OWNER_EMAIL) { setSession(data.session); setOtpPending(false); setOtpCode(""); }
+      else setAuthError("Verification completed, but the owner session was not returned. Please log in.");
+    } catch (error) { setAuthError(error.message || "Invalid or expired verification code."); }
+    finally { setBusy(false); }
+  }
+
+  async function resendEmailCode() {
+    if (!supabase || busy) return;
+    setBusy(true); setAuthError(""); setAuthMessage("");
+    try {
+      const { error } = await supabase.auth.resend({ type: "signup", email: email.trim().toLowerCase() });
+      if (error) throw error;
+      setAuthMessage("A new verification email has been sent. Check Inbox and Spam.");
+    } catch (error) { setAuthError(error.message || "Could not resend verification code."); }
+    finally { setBusy(false); }
+  }
 
   async function submitAuth(event) {
     event.preventDefault();
@@ -389,7 +417,7 @@ export default function App() {
         const { data, error } = await supabase.auth.signUp({ email: cleanEmail, password });
         if (error) throw error;
         if (data.session) setSession(data.session);
-        else setAuthMessage("اکاؤنٹ بن گیا ہے۔ اگر Gmail تصدیق مانگے تو اپنے Inbox میں تصدیقی لنک کھولیں؛ پاس ورڈ ای میل نہیں کیا جائے گا۔");
+        else { setOtpPending(true); setAuthMessage("Gmail پر بھیجا گیا 6 ہندسوں کا تصدیقی کوڈ درج کریں۔"); }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (error) throw error;
@@ -418,7 +446,7 @@ export default function App() {
       <h1>{t.welcome}</h1>
       <p className="auth-subtitle">{mode === "signup" ? t.signupSub : t.loginSub}</p>
       {!supabase ? <div className="notice">سائن اَپ ابھی فعال نہیں ہوا۔ منتظم کو Supabase کی سیٹنگز شامل کرنی ہوں گی۔</div> :
-      <form onSubmit={submitAuth} className="auth-form">
+      {otpPending ? <form onSubmit={verifyEmailCode} className="auth-form"><label htmlFor="auth-otp">Gmail تصدیقی کوڈ</label><input id="auth-otp" type="text" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength="6" pattern="[0-9]{6}" value={otpCode} onChange={e=>setOtpCode(e.target.value.replace(/[^0-9]/g,"").slice(0,6))} placeholder="123456" required /><button className="primary auth-submit" type="submit" disabled={busy || otpCode.length !== 6}>{busy ? "تصدیق ہو رہی ہے…" : "کوڈ کی تصدیق کریں"}</button><button className="text-button" type="button" onClick={resendEmailCode} disabled={busy}>نیا کوڈ دوبارہ بھیجیں</button></form> : <form onSubmit={submitAuth} className="auth-form">
         <label htmlFor="auth-email">{t.email}</label>
         <input id="auth-email" type="email" inputMode="email" autoComplete="email" dir="ltr" value={email} onChange={e=>setEmail(e.target.value)} placeholder="yourname@gmail.com" required />
         <label htmlFor="auth-password">{t.password}</label>
@@ -430,7 +458,7 @@ export default function App() {
           <button className="text-button" type="button" onClick={()=>setShowConfirmPassword(v=>!v)}>{showConfirmPassword ? t.hideConfirm : t.showConfirm}</button>
         </>}
         <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? (language === "ur" ? "براہِ کرم انتظار کریں…" : "Please wait…") : mode === "signup" ? t.signup : t.login}</button>
-        <button className="text-button" type="button" onClick={()=>{setMode(mode === "signup" ? "login" : "signup");setAuthError("");setAuthMessage("");setPassword("");setConfirmPassword("");}}>{mode === "signup" ? t.have : t.new}</button>
+        <button className="text-button" type="button" onClick={()=>{setMode(mode === "signup" ? "login" : "signup");setOtpPending(false);setOtpCode("");setAuthError("");setAuthMessage("");setPassword("");setConfirmPassword("");}}>{mode === "signup" ? t.have : t.new}</button>
       </form>}
       {authMessage && <div className="auth-success" role="status">{authMessage}</div>}
       {authError && <div className="notice" role="alert">{authError}</div>}
