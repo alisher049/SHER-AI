@@ -17,7 +17,7 @@ The API routes verify the user's Supabase access token before calling Gemini. Th
 
 ## Supabase sign-in
 
-Supabase handles Gmail/password registration and login. The application and both server-side AI endpoints restrict access to the owner Gmail account configured in `src/App.jsx` and `lib/server/auth.js`; update both locations together if the owner account ever changes. The project URL and Publishable Key are public client settings, not AI credentials. The app contains its current public project configuration as a fallback. If you change projects, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for the frontend build and `SUPABASE_URL` and `SUPABASE_ANON_KEY` for the Vercel API routes. Enable the Email provider in Supabase. Never use a service-role key in frontend code or the APK.
+Supabase handles Gmail/password registration, six-digit email OTP verification, and login. The application and both server-side AI endpoints restrict access to the owner Gmail account configured in `src/App.jsx` and `lib/server/auth.js`; update both locations together if the owner account ever changes. The project URL and Publishable Key are public client settings, not AI credentials. The app contains its current public project configuration as a fallback. If you change projects, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for the frontend build and `SUPABASE_URL` and `SUPABASE_ANON_KEY` for the Vercel API routes. Enable the Email provider in Supabase. To use the six-digit code screen, open Authentication → Email Templates → Confirm signup and use `{{ .Token }}` in the message body (not only `{{ .ConfirmationURL }}`); save the template and confirm SMTP/email delivery is configured. The app verifies the code with Supabase `verifyOtp` and supports resending it. Never use a service-role key in frontend code or the APK.
 
 ## Main features
 
@@ -39,7 +39,7 @@ The AI API routes run on Vercel. For local API development, use the Vercel CLI a
 
 ## Vercel deployment
 
-The root `vercel.json` configures the Vite build output. Vercel automatically detects the serverless handlers in `api/chat.js` and `api/generate.js`; do not add stale `functions` path patterns for files that do not exist.
+The root `vercel.json` configures the Vite build output. Vercel automatically detects the serverless handlers in `api/chat.js`, `api/generate.js`, and `api/image.js`; do not add stale `functions` path patterns for files that do not exist.
 
 After changing Environment Variables, redeploy the latest deployment so the serverless functions receive the updated values.
 
