@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import { createClient } from "@supabase/supabase-js";
 
 const steps = ["Describe", "Customize", "Build"];
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "https://sher-ai-swart.vercel.app").replace(/\\/$/, "");
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "https://sher-ai-swart.vercel.app").replace(/\/$/, "");
 function AppContent({ accessToken, onSignOut }) {
   const [step, setStep] = useState(0);
   const [idea, setIdea] = useState("");
