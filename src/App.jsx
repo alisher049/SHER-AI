@@ -443,9 +443,9 @@ export default function App() {
     <section className="auth-card">
       <img className="brain auth-brain" src="/icons/sher-ai-mark.svg" alt="SHER AI" style={{width:"76px",height:"76px",objectFit:"contain"}} /><div className="kicker">SHER AI ACCOUNT</div>
       <h1>{t.welcome}</h1>
-      <p className="auth-subtitle">{mode === "signup" ? t.signupSub : t.loginSub}</p>
+      <p className="auth-subtitle">{t.signupSub}</p>
       {!supabase ? <div className="notice">سائن اَپ ابھی فعال نہیں ہوا۔ منتظم کو Supabase کی سیٹنگز شامل کرنی ہوں گی۔</div> :
-      {otpPending ? <form onSubmit={verifyEmailCode} className="auth-form">
+      otpPending ? <form onSubmit={verifyEmailCode} className="auth-form">
         <label htmlFor="auth-otp">Gmail تصدیقی کوڈ</label>
         <input id="auth-otp" type="text" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength="6" pattern="[0-9]{6}" value={otpCode} onChange={e=>setOtpCode(e.target.value.replace(/[^0-9]/g,"").slice(0,6))} placeholder="123456" required />
         <button className="primary auth-submit" type="submit" disabled={busy || otpCode.length !== 6}>{busy ? "تصدیق ہو رہی ہے…" : t.verify}</button>
