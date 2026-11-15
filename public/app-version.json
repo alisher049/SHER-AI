@@ -1,0 +1,10 @@
+{
+  "version": "1.1.0",
+  "name": "SHER AI",
+  "releasedAt": "2026-11-15",
+  "features": [
+    "Upgrade Center",
+    "PWA service worker cache refresh",
+    "Manual Android APK update guidance"
+  ]
+}
