@@ -195,7 +195,7 @@ function AppContent({ accessToken, onSignOut }) {
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Speech) { setChatError("آپ کے براؤزر میں voice typing دستیاب نہیں۔ Chrome میں دوبارہ کوشش کریں۔"); return; }
     const recognition = new Speech();
-    recognition.lang = "ur-PK";
+    recognition.lang = /[\\u0600-\\u06FF]/.test(chatInput) ? "ur-PK" : "en-US";
     recognition.interimResults = false;
     recognition.onstart = () => setListening(true);
     recognition.onend = () => setListening(false);
@@ -250,6 +250,7 @@ function AppContent({ accessToken, onSignOut }) {
       setChatMessages([...nextMessages, { role: "assistant", content: result.answer }].slice(-12));
       setSelectedImage(null);
     } catch (error) {
+      setChatInput(previous => previous || text);
       setChatError(error.message || "Could not reach SHER AI. Please try again.");
     } finally { setChatLoading(false); }
   }
