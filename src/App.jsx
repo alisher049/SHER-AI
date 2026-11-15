@@ -430,15 +430,14 @@ export default function App() {
     await installPrompt.userChoice;
     setInstallPrompt(null);
   }
-  const [authMode, setAuthMode] = useState("login");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
   const [busy, setBusy] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
   const [authError, setAuthError] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const t = language === "ur"
-    ? {welcome:"SHER AI میں خوش آمدید", subtitle:authMode === "login" ? "اپنے ای میل اور پاس ورڈ سے لاگ اِن کریں۔" : "اپنا اکاؤنٹ بنانے کے لیے ای میل اور پاس ورڈ درج کریں۔", email:"ای میل ایڈریس", password:"پاس ورڈ", confirm:"پاس ورڈ دوبارہ درج کریں", submit:authMode === "login" ? "لاگ اِن کریں" : "اکاؤنٹ بنائیں", invalid:"درست ای میل ایڈریس درج کریں۔", language:"English", switchText:authMode === "login" ? "نیا اکاؤنٹ بنائیں" : "پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں"}
-    : {welcome:"Welcome to SHER AI", subtitle:authMode === "login" ? "Log in with your email and password." : "Create your account with an email and password.", email:"Email address", password:"Password", confirm:"Confirm password", submit:authMode === "login" ? "Log in" : "Create account", invalid:"Enter a valid email address.", language:"اردو", switchText:authMode === "login" ? "Create a new account" : "Already have an account? Log in"};
+    ? {welcome:"SHER AI میں خوش آمدید", subtitle:otpSent ? "اپنے Gmail پر موصول ہونے والا 6 ہندسوں کا کوڈ درج کریں۔" : "اپنے مالک Gmail پر 6 ہندسوں کا تصدیقی کوڈ حاصل کریں۔", email:"Gmail ایڈریس", otp:"6 ہندسوں کا کوڈ", submit:otpSent ? "کوڈ کی تصدیق کریں" : "Gmail پر کوڈ بھیجیں", invalid:"درست ای میل ایڈریس درج کریں۔", language:"English", resend:"دوبارہ کوڈ بھیجیں"}
+    : {welcome:"Welcome to SHER AI", subtitle:otpSent ? "Enter the 6-digit code sent to your Gmail." : "Get a 6-digit verification code at your owner Gmail.", email:"Gmail address", otp:"6-digit code", submit:otpSent ? "Verify code" : "Send code to Gmail", invalid:"Enter a valid email address.", language:"اردو", resend:"Resend code"};
 
   useEffect(() => {
     if (!supabase) { setAuthReady(true); return; }
@@ -458,27 +457,32 @@ export default function App() {
     event.preventDefault();
     if (!supabase || busy) return;
     const cleanEmail = email.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) { setAuthError(t.invalid); return; }
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(cleanEmail)) { setAuthError(t.invalid); return; }
     if (cleanEmail !== OWNER_EMAIL) { setAuthError("یہ SHER AI صرف مالک کے Gmail اکاؤنٹ کے لیے ہے۔"); return; }
-    if (password.length < 8) { setAuthError("پاس ورڈ کم از کم 8 حروف کا ہونا چاہیے۔"); return; }
-    if (authMode === "signup" && password !== confirmPassword) { setAuthError("دونوں پاس ورڈ ایک جیسے نہیں ہیں۔"); return; }
     setEmail(cleanEmail); setBusy(true); setAuthError(""); setAuthMessage("");
     try {
-      if (authMode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email: cleanEmail, password });
+      if (!otpSent) {
+        const { error } = await supabase.auth.signInWithOtp({
+          email: cleanEmail,
+          options: { shouldCreateUser: false }
+        });
         if (error) throw error;
-        if (data.session?.user?.email?.toLowerCase() === OWNER_EMAIL) setSession(data.session);
-        else setAuthMessage("اکاؤنٹ کی درخواست موصول ہوئی۔ اگر لاگ اِن نہ ہو تو Supabase میں Confirm email بند ہونے کی تصدیق کریں۔");
+        setOtpSent(true);
+        setAuthMessage("6 ہندسوں کا کوڈ آپ کے Gmail پر بھیج دیا گیا ہے۔ Inbox اور Spam دونوں چیک کریں۔");
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+        const cleanOtp = otp.replace(/\\s/g, "");
+        if (!/^\\d{6}$/.test(cleanOtp)) throw new Error("براہِ کرم 6 ہندسوں کا درست کوڈ درج کریں۔");
+        const { data, error } = await supabase.auth.verifyOtp({ email: cleanEmail, token: cleanOtp, type: "email" });
         if (error) throw error;
         if (data.session?.user?.email?.toLowerCase() === OWNER_EMAIL) setSession(data.session);
         else { await supabase.auth.signOut(); throw new Error("اس ای میل کو SHER AI میں اجازت نہیں ہے۔"); }
       }
     } catch (error) {
-      if (/invalid login credentials/i.test(error.message || "")) setAuthError("ای میل یا پاس ورڈ درست نہیں۔ پرانے OTP اکاؤنٹ میں پاس ورڈ مقرر نہ ہو تو منتظم کو اسی موجودہ اکاؤنٹ کا پاس ورڈ مقرر کرنا ہوگا۔");
-      else setAuthError(error.message || "اکاؤنٹ کی کارروائی مکمل نہیں ہو سکی۔");
+      setAuthError(error.message || "تصدیق مکمل نہیں ہو سکی۔ دوبارہ کوشش کریں۔");
     } finally { setBusy(false); }
+  }
+  async function resendOtp() {
+    setOtp(""); setOtpSent(false); setAuthMessage(""); setAuthError("");
   }
   async function signOut() {
     if (supabase) await supabase.auth.signOut();
@@ -500,19 +504,17 @@ export default function App() {
       {!supabase ? <div className="notice">سائن اَپ ابھی فعال نہیں ہوا۔ منتظم کو Supabase کی سیٹنگز شامل کرنی ہوں گی۔</div> :
       <form onSubmit={submitAuth} className="auth-form">
         <label htmlFor="auth-email">{t.email}</label>
-        <input id="auth-email" type="email" autoComplete="username" dir="ltr" value={email} onChange={e=>setEmail(e.target.value)} placeholder="alishermeo049@gmail.com" required />
-        <label htmlFor="auth-password">{t.password}</label>
-        <input id="auth-password" type="password" autoComplete={authMode === "login" ? "current-password" : "new-password"} dir="ltr" minLength="8" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" required />
-        {authMode === "signup" && <>
-          <label htmlFor="auth-confirm-password">{t.confirm}</label>
-          <input id="auth-confirm-password" type="password" autoComplete="new-password" dir="ltr" minLength="8" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="••••••••" required />
+        <input id="auth-email" type="email" autoComplete="email" dir="ltr" value={email} onChange={e=>setEmail(e.target.value)} placeholder="alishermeo049@gmail.com" required disabled={otpSent} />
+        {otpSent && <>
+          <label htmlFor="auth-otp">{t.otp}</label>
+          <input id="auth-otp" type="text" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength="6" pattern="[0-9]{6}" value={otp} onChange={e=>setOtp(e.target.value.replace(/\\D/g,"").slice(0,6))} placeholder="123456" required />
         </>}
-        <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? "براہِ کرم انتظار کریں…" : t.submit}</button>
-        <button className="text-button" type="button" disabled={busy} onClick={()=>{setAuthMode(authMode === "login" ? "signup" : "login");setAuthError("");setAuthMessage("");setPassword("");setConfirmPassword("");}}>{t.switchText}</button>
+        <button className="primary auth-submit" type="submit" disabled={busy || (otpSent && otp.length !== 6)}>{busy ? "براہِ کرم انتظار کریں…" : t.submit}</button>
+        {otpSent && <button className="text-button" type="button" disabled={busy} onClick={resendOtp}>{t.resend}</button>}
       </form>}
       {authMessage && <div className="auth-success" role="status">{authMessage}</div>}
       {authError && <div className="notice" role="alert">{authError}</div>}
-      <p className="auth-footnote">ای میل پر OTP یا Magic Link نہیں بھیجا جائے گا۔ پاس ورڈ کم از کم 8 حروف کا رکھیں۔<br/>ایپ انسٹال کرنے کے لیے Chrome کے ⋮ مینو میں “Install app” یا “Add to Home screen” منتخب کریں۔</p>
+      <p className="auth-footnote">Gmail پر 6 ہندسوں کا OTP بھیجا جائے گا۔ اگر کوڈ نہ ملے تو Spam فولڈر اور Supabase Email SMTP سیٹنگز چیک کریں۔<br/>ایپ انسٹال کرنے کے لیے Chrome کے ⋮ مینو میں “Install app” یا “Add to Home screen” منتخب کریں۔</p>
     </section>
     </>
   </main>;
