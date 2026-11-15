@@ -1,4 +1,5 @@
 import { requireUser } from "../lib/server/auth.js";
+import { applyCors } from "../lib/server/cors.js";
 import { generateWithGemini } from "../lib/server/gemini.js";
 
 function json(res, status, body) {
@@ -8,6 +9,8 @@ function json(res, status, body) {
 }
 
 export default async function handler(req, res) {
+  applyCors(req, res);
+  if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return json(res, 405, { error: "Only POST requests are allowed." });
