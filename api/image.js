@@ -30,15 +30,16 @@ export default async function handler(req, res) {
 
   const model = process.env.GEMINI_IMAGE_MODEL || "gemini-3.1-flash-image";
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/interactions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-goog-api-key": apiKey
       },
       body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: "Generate one high-quality image from this description. Return the image, not only a description. Prompt: " + prompt.trim() }] }],
-        generationConfig: { responseModalities: ["IMAGE"] }
+        model,
+        input: "Generate one high-quality image from this description. Return the image, not only a description. Prompt: " + prompt.trim(),
+        response_format: { type: "image", mime_type: "image/png", aspect_ratio: "1:1", image_size: "1K" }
       })
     });
 
@@ -48,15 +49,15 @@ export default async function handler(req, res) {
       return json(res, response.status === 429 ? 429 : 502, { error: message });
     }
 
-    const parts = data.candidates?.[0]?.content?.parts || [];
-    const imagePart = parts.find(part => part.inlineData?.data && /^image\/(png|jpeg|webp)$/.test(part.inlineData.mimeType || ""));
-    if (!imagePart) {
+    const imageData = data.output_image?.data;
+    const mimeType = data.output_image?.mime_type || "image/png";
+    if (!imageData || !/^image\/(png|jpeg|webp)$/.test(mimeType)) {
       return json(res, 502, { error: "AI نے تصویر واپس نہیں کی۔ ماڈل، اکاؤنٹ کی دستیابی اور Google API کی حدود چیک کریں۔" });
     }
 
     return json(res, 200, {
-      image: imagePart.inlineData.data,
-      mimeType: imagePart.inlineData.mimeType
+      image: imageData,
+      mimeType
     });
   } catch {
     return json(res, 502, { error: "تصویر بنانے والے سرور سے رابطہ نہیں ہو سکا۔ دوبارہ کوشش کریں۔" });
