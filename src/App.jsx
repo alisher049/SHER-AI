@@ -384,14 +384,14 @@ function AppContent({ accessToken, onSignOut }) {
         <h3 style={{marginTop:"14px"}}>تازہ ترین دستیاب ورژن</h3>
         <p className="tool-result" dir="ltr">{latestVersion ? "v" + latestVersion : "ابھی چیک نہیں کیا"}</p>
         <button className="primary" type="button" disabled={checkingUpgrade} onClick={checkForUpdates}>{checkingUpgrade ? "چیک ہو رہا ہے…" : "ابھی اپ ڈیٹ چیک کریں"}</button>
-        {latestVersion && latestVersion !== APP_VERSION && <a className="primary" href="https://github.com/alisher049/SHER-AI/actions/workflows/android-apk.yml" target="_blank" rel="noreferrer" style={{display:"inline-block",textDecoration:"none",marginTop:"10px",padding:"12px 16px",borderRadius:"10px"}}>نئی APK ڈاؤن لوڈ کریں · v{latestVersion}</a>}
+        {latestVersion && latestVersion !== APP_VERSION && <a className="primary" href="https://github.com/alisher049/SHER-AI/releases/latest/download/SHER-AI.apk" target="_blank" rel="noreferrer" style={{display:"inline-block",textDecoration:"none",marginTop:"10px",padding:"12px 16px",borderRadius:"10px"}}>نئی APK ڈاؤن لوڈ کریں · v{latestVersion}</a>}
         <button className="secondary" type="button" style={{marginLeft:"8px"}} onClick={refreshUpdatedApp}>ویب ایپ ریفریش کریں</button>
         <p className="tool-result" role="status">{upgradeStatus}</p>
       </div>
       <div className="smart-card">
         <h3>Android APK اپ ڈیٹ</h3>
         <p className="muted">Android ایپ کی نئی APK یہاں سے حاصل کریں۔ انسٹالیشن آپ کی اجازت سے ہوگی؛ پرانی APK کو نئی APK سے اپ ڈیٹ کریں۔</p>
-        <a className="primary" href="https://github.com/alisher049/SHER-AI/actions" target="_blank" rel="noreferrer" style={{display:"inline-block",textDecoration:"none",marginTop:"8px",padding:"12px 16px",borderRadius:"10px"}}>نئی APK حاصل کریں</a>
+        <a className="primary" href="https://github.com/alisher049/SHER-AI/releases/latest/download/SHER-AI.apk" target="_blank" rel="noreferrer" style={{display:"inline-block",textDecoration:"none",marginTop:"8px",padding:"12px 16px",borderRadius:"10px"}}>نئی APK حاصل کریں</a>
       </div>
       <p className="chat-footnote">نوٹ: ویب/PWA ورژن سرور اور Service Worker کے ذریعے اپ ڈیٹ ہو سکتا ہے۔ Android APK کو خودکار طور پر خاموشی سے تبدیل نہیں کیا جا سکتا؛ نئی APK انسٹال کرنے کے لیے Android کی تصدیق ضروری ہے۔</p>
     </section>}
