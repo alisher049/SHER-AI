@@ -1,6 +1,6 @@
 {
   "id": "/",
-  "name": "SHER AI — App Builder",
+  "name": "SHER AI",
   "short_name": "SHER AI",
   "description": "Build your app in three simple steps.",
   "lang": "ur",
@@ -13,7 +13,7 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icons/sher-ai.svg",
+      "src": "/icons/sher-ai-mark.svg",
       "sizes": "192x192 512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
