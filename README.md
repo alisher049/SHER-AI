@@ -44,11 +44,11 @@ After changing Environment Variables, redeploy the latest deployment so the serv
 
 ## Installable PWA
 
-The project includes a web app manifest, app icon, and service worker. On supported Android browsers, open the deployed HTTPS website and choose **Install app** or **Add to Home screen**. The service worker checks the network first for page navigations, so deployed web updates can load without requiring a new APK. Web changes still need to be committed and deployed; native Android changes require a new APK build.
+The project includes a web app manifest, app icon, and service worker. On supported Android browsers, open the deployed HTTPS website and choose **Install app** or **Add to Home screen**. The service worker checks the network first for page navigations, so deployed PWA updates load from Vercel. The Capacitor APK bundles its web assets; after frontend changes, build and install a new APK to update the native app.
 
 ## Android APK
 
-The GitHub Actions workflow builds a debug APK for testing. After a successful run, download the `sher-ai-debug-apk` artifact from the workflow run. This is not a signed Play Store release.
+The GitHub Actions workflow builds a debug APK for testing and configures the app to call the deployed Vercel API (override with the `VITE_API_BASE_URL` Actions variable if the deployment domain changes). After a successful run, download the `sher-ai-debug-apk` artifact from the workflow run. This is not a signed Play Store release.
 
 ## Important limitations
 
