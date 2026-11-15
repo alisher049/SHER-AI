@@ -252,7 +252,7 @@ function AppContent({ accessToken, onSignOut }) {
 
   return <main className="shell">
     <header className="topbar">
-      <div className="brand"><div className="brain">🧠</div><div><strong>SHER AI</strong><small>YOUR PERSONAL AI ASSISTANT</small></div></div>
+      <div className="brand"><img className="brand-logo" src="/icons/sher-ai-mark.svg" alt="SHER AI" style={{width:"42px",height:"42px",objectFit:"contain"}} /><div><strong>SHER AI</strong><small>YOUR PERSONAL AI ASSISTANT</small></div></div>
       <button className="signout-button" onClick={onSignOut}>خروج</button>
     </header>
     <nav className="workspace-tabs" aria-label="SHER AI tools">
@@ -433,7 +433,7 @@ export default function App() {
     setSession(null); setPassword(""); setConfirmPassword(""); setMode("signup");
   }
 
-  if (!authReady) return <main className="auth-shell"><section className="auth-card"><div className="brain">🧠</div><h1>SHER AI</h1><p>لوڈ ہو رہا ہے…</p></section></main>;
+  if (!authReady) return <main className="auth-shell"><section className="auth-card"><img src="/icons/sher-ai-mark.svg" alt="SHER AI" style={{width:"64px",height:"64px",objectFit:"contain"}} /><h1>SHER AI</h1><p>لوڈ ہو رہا ہے…</p></section></main>;
   if (!session) return <main className="auth-shell" dir={language === "ur" ? "rtl" : "ltr"}>
     <>
     <div className="corner-tools">
@@ -442,7 +442,7 @@ export default function App() {
       <button className="corner-tool language-tool" type="button" onClick={() => setLanguage(v => v === "ur" ? "en" : "ur")}>{t.language}</button>
     </div>
     <section className="auth-card">
-      <div className="brain auth-brain">🧠</div><div className="kicker">SHER AI ACCOUNT</div>
+      <img className="brain auth-brain" src="/icons/sher-ai-mark.svg" alt="SHER AI" style={{width:"76px",height:"76px",objectFit:"contain"}} /><div className="kicker">SHER AI ACCOUNT</div>
       <h1>{t.welcome}</h1>
       <p className="auth-subtitle">{mode === "signup" ? t.signupSub : t.loginSub}</p>
       {!supabase ? <div className="notice">سائن اَپ ابھی فعال نہیں ہوا۔ منتظم کو Supabase کی سیٹنگز شامل کرنی ہوں گی۔</div> :
