@@ -355,14 +355,15 @@ export default function App() {
     await installPrompt.userChoice;
     setInstallPrompt(null);
   }
-  const t = language === "ur"
-    ? {welcome:"SHER AI میں خوش آمدید", signupSub:"اپنا Gmail ایڈریس درج کریں۔ ہم آپ کو 6 ہندسوں کا تصدیقی کوڈ بھیجیں گے۔", email:"Gmail ایڈریس", sendCode:"تصدیقی کوڈ بھیجیں", verify:"کوڈ کی تصدیق کریں", invalid:"درست Gmail ایڈریس لکھیں، مثلاً name@gmail.com۔", language:"English"}
-    : {welcome:"Welcome to SHER AI", signupSub:"Enter your Gmail address. We will send you a 6-digit verification code.", email:"Gmail address", sendCode:"Send verification code", verify:"Verify code", invalid:"Enter a valid Gmail address, for example name@gmail.com.", language:"اردو"};
+  const [authMode, setAuthMode] = useState("login");
   const [busy, setBusy] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
   const [authError, setAuthError] = useState("");
-  const [otpPending, setOtpPending] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const t = language === "ur"
+    ? {welcome:"SHER AI میں خوش آمدید", subtitle:authMode === "login" ? "اپنے ای میل اور پاس ورڈ سے لاگ اِن کریں۔" : "اپنا اکاؤنٹ بنانے کے لیے ای میل اور پاس ورڈ درج کریں۔", email:"ای میل ایڈریس", password:"پاس ورڈ", confirm:"پاس ورڈ دوبارہ درج کریں", submit:authMode === "login" ? "لاگ اِن کریں" : "اکاؤنٹ بنائیں", invalid:"درست ای میل ایڈریس درج کریں۔", language:"English", switchText:authMode === "login" ? "نیا اکاؤنٹ بنائیں" : "پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں"}
+    : {welcome:"Welcome to SHER AI", subtitle:authMode === "login" ? "Log in with your email and password." : "Create your account with an email and password.", email:"Email address", password:"Password", confirm:"Confirm password", submit:authMode === "login" ? "Log in" : "Create account", invalid:"Enter a valid email address.", language:"اردو", switchText:authMode === "login" ? "Create a new account" : "Already have an account? Log in"};
 
   useEffect(() => {
     if (!supabase) { setAuthReady(true); return; }
@@ -378,59 +379,35 @@ export default function App() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  async function verifyEmailCode(event) {
-    event.preventDefault();
-    if (!supabase || busy) return;
-    const token = otpCode.trim();
-    if (!/^\d{6}$/.test(token)) { setAuthError("Gmail verification code must be six digits."); return; }
-    setBusy(true); setAuthError(""); setAuthMessage("");
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token, type: "email" });
-      if (error) throw error;
-      if (data.session?.user?.email?.toLowerCase() === OWNER_EMAIL) { setSession(data.session); setOtpPending(false); setOtpCode(""); }
-      else setAuthError("Verification completed, but the owner session was not returned. Please log in.");
-    } catch (error) { setAuthError(error.message || "Invalid or expired verification code."); }
-    finally { setBusy(false); }
-  }
-
-  async function resendEmailCode() {
-    if (!supabase || busy) return;
-    setBusy(true); setAuthError(""); setAuthMessage("");
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim().toLowerCase(),
-        options: { shouldCreateUser: true }
-      });
-      if (error) throw error;
-      setAuthMessage("نیا 6 ہندسوں کا تصدیقی کوڈ Gmail پر بھیج دیا گیا ہے۔");
-    } catch (error) { setAuthError(error.message || "Could not resend verification code."); }
-    finally { setBusy(false); }
-  }
-
   async function submitAuth(event) {
     event.preventDefault();
     if (!supabase || busy) return;
-    const cleanEmail = email.replace(/[\u200B-\u200D\uFEFF]/g, "").trim().toLowerCase();
-    if (!/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@gmail\.com$/i.test(cleanEmail)) { setAuthError(t.invalid); return; }
+    const cleanEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) { setAuthError(t.invalid); return; }
     if (cleanEmail !== OWNER_EMAIL) { setAuthError("یہ SHER AI صرف مالک کے Gmail اکاؤنٹ کے لیے ہے۔"); return; }
-    setEmail(cleanEmail);
-    setBusy(true); setAuthError(""); setAuthMessage("");
+    if (password.length < 8) { setAuthError("پاس ورڈ کم از کم 8 حروف کا ہونا چاہیے۔"); return; }
+    if (authMode === "signup" && password !== confirmPassword) { setAuthError("دونوں پاس ورڈ ایک جیسے نہیں ہیں۔"); return; }
+    setEmail(cleanEmail); setBusy(true); setAuthError(""); setAuthMessage("");
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: cleanEmail,
-        options: { shouldCreateUser: true }
-      });
-      if (error) throw error;
-      setOtpPending(true);
-      setAuthMessage("Gmail پر بھیجا گیا 6 ہندسوں کا تصدیقی کوڈ درج کریں۔");
+      if (authMode === "signup") {
+        const { data, error } = await supabase.auth.signUp({ email: cleanEmail, password });
+        if (error) throw error;
+        if (data.session?.user?.email?.toLowerCase() === OWNER_EMAIL) setSession(data.session);
+        else setAuthMessage("اکاؤنٹ کی درخواست موصول ہوئی۔ اگر لاگ اِن نہ ہو تو Supabase میں Confirm email بند ہونے کی تصدیق کریں۔");
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+        if (error) throw error;
+        if (data.session?.user?.email?.toLowerCase() === OWNER_EMAIL) setSession(data.session);
+        else { await supabase.auth.signOut(); throw new Error("اس ای میل کو SHER AI میں اجازت نہیں ہے۔"); }
+      }
     } catch (error) {
-      setAuthError(error.message || "اکاؤنٹ کی کارروائی مکمل نہیں ہو سکی۔ دوبارہ کوشش کریں۔");
+      if (/invalid login credentials/i.test(error.message || "")) setAuthError("ای میل یا پاس ورڈ درست نہیں۔ پرانے OTP اکاؤنٹ میں پاس ورڈ مقرر نہ ہو تو منتظم کو اسی موجودہ اکاؤنٹ کا پاس ورڈ مقرر کرنا ہوگا۔");
+      else setAuthError(error.message || "اکاؤنٹ کی کارروائی مکمل نہیں ہو سکی۔");
     } finally { setBusy(false); }
   }
-
   async function signOut() {
     if (supabase) await supabase.auth.signOut();
-    setSession(null); setEmail(""); setOtpCode(""); setOtpPending(false);
+    setSession(null); setEmail(""); setPassword(""); setConfirmPassword("");
   }
 
   if (!authReady) return <main className="auth-shell"><section className="auth-card"><img src="/icons/sher-ai-mark.svg" alt="SHER AI" style={{width:"64px",height:"64px",objectFit:"contain"}} /><h1>SHER AI</h1><p>لوڈ ہو رہا ہے…</p></section></main>;
@@ -444,21 +421,23 @@ export default function App() {
     <section className="auth-card">
       <img className="brain auth-brain" src="/icons/sher-ai-mark.svg" alt="SHER AI" style={{width:"76px",height:"76px",objectFit:"contain"}} /><div className="kicker">SHER AI ACCOUNT</div>
       <h1>{t.welcome}</h1>
-      <p className="auth-subtitle">{t.signupSub}</p>
+      <p className="auth-subtitle">{t.subtitle}</p>
       {!supabase ? <div className="notice">سائن اَپ ابھی فعال نہیں ہوا۔ منتظم کو Supabase کی سیٹنگز شامل کرنی ہوں گی۔</div> :
-      otpPending ? <form onSubmit={verifyEmailCode} className="auth-form">
-        <label htmlFor="auth-otp">Gmail تصدیقی کوڈ</label>
-        <input id="auth-otp" type="text" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength="6" pattern="[0-9]{6}" value={otpCode} onChange={e=>setOtpCode(e.target.value.replace(/[^0-9]/g,"").slice(0,6))} placeholder="123456" required />
-        <button className="primary auth-submit" type="submit" disabled={busy || otpCode.length !== 6}>{busy ? "تصدیق ہو رہی ہے…" : t.verify}</button>
-        <button className="text-button" type="button" onClick={resendEmailCode} disabled={busy}>نیا کوڈ دوبارہ بھیجیں</button>
-      </form> : <form onSubmit={submitAuth} className="auth-form">
+      <form onSubmit={submitAuth} className="auth-form">
         <label htmlFor="auth-email">{t.email}</label>
-        <input id="auth-email" type="email" inputMode="email" autoComplete="email" dir="ltr" value={email} onChange={e=>setEmail(e.target.value)} placeholder="yourname@gmail.com" required />
-        <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? (language === "ur" ? "براہِ کرم انتظار کریں…" : "Please wait…") : t.sendCode}</button>
+        <input id="auth-email" type="email" autoComplete="username" dir="ltr" value={email} onChange={e=>setEmail(e.target.value)} placeholder="alishermeo049@gmail.com" required />
+        <label htmlFor="auth-password">{t.password}</label>
+        <input id="auth-password" type="password" autoComplete={authMode === "login" ? "current-password" : "new-password"} dir="ltr" minLength="8" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" required />
+        {authMode === "signup" && <>
+          <label htmlFor="auth-confirm-password">{t.confirm}</label>
+          <input id="auth-confirm-password" type="password" autoComplete="new-password" dir="ltr" minLength="8" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="••••••••" required />
+        </>}
+        <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? "براہِ کرم انتظار کریں…" : t.submit}</button>
+        <button className="text-button" type="button" disabled={busy} onClick={()=>{setAuthMode(authMode === "login" ? "signup" : "login");setAuthError("");setAuthMessage("");setPassword("");setConfirmPassword("");}}>{t.switchText}</button>
       </form>}
       {authMessage && <div className="auth-success" role="status">{authMessage}</div>}
       {authError && <div className="notice" role="alert">{authError}</div>}
-      <p className="auth-footnote">لاگ اِن کے لیے پاس ورڈ کی ضرورت نہیں۔ صرف اپنے Gmail پر آنے والا 6 ہندسوں کا تصدیقی کوڈ درج کریں۔<br/>ایپ انسٹال کرنے کے لیے Chrome کے ⋮ مینو میں “Install app” یا “Add to Home screen” منتخب کریں۔</p>
+      <p className="auth-footnote">ای میل پر OTP یا Magic Link نہیں بھیجا جائے گا۔ پاس ورڈ کم از کم 8 حروف کا رکھیں۔<br/>ایپ انسٹال کرنے کے لیے Chrome کے ⋮ مینو میں “Install app” یا “Add to Home screen” منتخب کریں۔</p>
     </section>
     </>
   </main>;
