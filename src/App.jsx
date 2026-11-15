@@ -486,7 +486,7 @@ export default function App() {
   }
   async function signOut() {
     if (supabase) await supabase.auth.signOut();
-    setSession(null); setEmail(""); setPassword(""); setConfirmPassword("");
+    setSession(null); setEmail(""); setOtp(""); setOtpSent(false);
   }
 
   if (!authReady) return <main className="auth-shell"><section className="auth-card"><img src="/icons/sher-ai-mark.svg" alt="SHER AI" style={{width:"64px",height:"64px",objectFit:"contain"}} /><h1>SHER AI</h1><p>لوڈ ہو رہا ہے…</p></section></main>;
