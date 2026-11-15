@@ -10,7 +10,7 @@ SHER AI sends AI requests to its Vercel serverless API routes:
 - `POST /api/generate` — starter source-project generation.
 - Shared server helpers: `lib/server/auth.js` and `lib/server/gemini.js` (kept outside `api/` so Vercel does not expose them as API routes).
 
-Set `GEMINI_API_KEY` in Vercel → Project → Settings → Environment Variables. Keep it server-side: never add it to a `VITE_*` variable, frontend code, GitHub source, or the Android APK. The default model is `gemini-2.5-flash`; optionally set `GEMINI_MODEL` to another model enabled for your Google AI Studio project.
+Set `GEMINI_API_KEY` in Vercel → Project → Settings → Environment Variables. Keep it server-side: never add it to a `VITE_*` variable, frontend code, GitHub source, or the Android APK. The default model is `gemini-3.8-flash`; optionally set `GEMINI_MODEL` to another model enabled for your Google AI Studio project.
 
 The API routes verify the user's Supabase access token before calling Gemini. They return clear errors if the key is missing, invalid, or over quota.
 
