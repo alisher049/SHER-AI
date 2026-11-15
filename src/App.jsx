@@ -58,7 +58,7 @@ function AppContent({ accessToken, onSignOut }) {
       const link = document.createElement("a");
       const safeName = appName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "my-app";
       link.href = url; link.download = safeName + "-source.zip";
-      document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+      document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
       setNotice("آپ کا source ZIP تیار ہے۔ اسے استعمال کرنے سے پہلے ضرور ٹیسٹ کریں۔");
     } catch (error) {
       setNotice(error.message || "Could not generate the project. Please try again.");
@@ -153,7 +153,7 @@ function AppContent({ accessToken, onSignOut }) {
     if (!("speechSynthesis" in window)) { setChatError("اس براؤزر میں آواز سے پڑھنے کی سہولت دستیاب نہیں۔"); return; }
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = /[\\u0600-\\u06FF]/.test(text) ? "ur-PK" : "en-US";
+    utterance.lang = /[\u0600-\u06FF]/.test(text) ? "ur-PK" : "en-US";
     window.speechSynthesis.speak(utterance);
   }
 
@@ -238,6 +238,7 @@ function AppContent({ accessToken, onSignOut }) {
       <button className={view === "studio" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("studio")}>⚡ Fast Studio</button>
       <button className={view === "builder" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("builder")}>▣ App Builder</button>
       <button className={view === "smart" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("smart")}>⚙ Smart Tools</button>
+      <button className={view === "images" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("images")}>✧ Image Studio</button>
     </nav>
 
     {view === "chat" && <section className="chat-panel">
@@ -278,12 +279,12 @@ function AppContent({ accessToken, onSignOut }) {
     </section>}
 
     {view === "builder" && <>
-      <section className="hero"><div className="eyebrow">IDEA TO ANDROID APP</div><h1>اپنی ایپ بنائیں۔<br/><span>صرف 3 آسان مراحل میں۔</span></h1><p>اپنا آئیڈیا لکھیں، اپنی پسند کے مطابق بنائیں اور source project تیار کریں۔</p></section>
+      <section className="hero"><div className="eyebrow">IDEA TO ANDROID APP</div><h1>اپنی ایپ بنائیں۔<br/><span>صرف 3 آسان مراحل میں۔</span></h1><p>اپنا آئیڈیا لکھیں، اپنی پسند کے مطابق بنائیں اور source project ZIP ڈاؤن لوڈ کریں۔ یہ مرحلہ خودکار APK نہیں بناتا۔</p></section>
       <nav className="steps" aria-label="Creation steps">{steps.map((label, i) => <div className={"step " + (i === step ? "active " : "") + (i < step ? "done" : "")} key={label}><b>{i < step ? "✓" : "0" + (i+1)}</b><span>{label}</span></div>)}</nav>
       <section className="panel">
         {step === 0 && <><div className="panel-icon">✎</div><div className="kicker">STEP 01 — YOUR IDEA</div><h2>آپ کیا بنانا چاہتے ہیں؟</h2><p className="muted">اردو، ہندی یا English میں اپنی ایپ کی تفصیل لکھیں۔</p><label htmlFor="idea">ایپ کا آئیڈیا</label><textarea id="idea" rows="5" value={idea} onChange={e=>setIdea(e.target.value)} placeholder="مثلاً ایک فوڈ ڈیلیوری ایپ بنائیں..."/><div className="hint">ایپ کے صارفین، اہم فیچرز اور کام کرنے کا طریقہ بتائیں۔</div></>}
-        {step === 1 && <><div className="panel-icon">✦</div><div className="kicker">STEP 02 — MAKE IT YOURS</div><h2>اپنی ایپ کو ترتیب دیں</h2><label htmlFor="appName">ایپ کا نام</label><input id="appName" value={appName} onChange={e=>setAppName(e.target.value)}/><label htmlFor="platform">پلیٹ فارم</label><select id="platform" value={platform} onChange={e=>setPlatform(e.target.value)}><option>Android APK</option><option>Web app</option><option>Android APK + Web app</option></select><div className="summary"><b>آپ کا آئیڈیا</b><p>{idea}</p></div></>}
-        {step === 2 && <><div className="panel-icon">⚡</div><div className="kicker">STEP 03 — BUILD & EXPORT</div><h2>{appName || "آپ کی ایپ"} تیار کریں</h2><p className="muted">SHER AI آپ کے آئیڈیا سے ابتدائی source files بنائے گا اور ZIP میں دے گا۔</p><div className="summary"><b>ایپ کا آئیڈیا</b><p>{idea}</p><b>پلیٹ فارم</b><p>{platform}</p></div><div className="notice">یہ source ZIP ہے، تیار APK نہیں۔ APK بنانے کے لیے الگ Android build ضروری ہے۔</div></>}
+        {step === 1 && <><div className="panel-icon">✦</div><div className="kicker">STEP 02 — MAKE IT YOURS</div><h2>اپنی ایپ کو ترتیب دیں</h2><label htmlFor="appName">ایپ کا نام</label><input id="appName" value={appName} onChange={e=>setAppName(e.target.value)}/><label htmlFor="platform">پلیٹ فارم</label><select id="platform" value={platform} onChange={e=>setPlatform(e.target.value)}><option>Android app source (ZIP)</option><option>Web app source (ZIP)</option><option>Android + Web source (ZIP)</option></select><div className="summary"><b>آپ کا آئیڈیا</b><p>{idea}</p></div></>}
+        {step === 2 && <><div className="panel-icon">⚡</div><div className="kicker">STEP 03 — BUILD & EXPORT</div><h2>{appName || "آپ کی ایپ"} تیار کریں</h2><p className="muted">SHER AI آپ کے آئیڈیا سے ابتدائی source files بنائے گا اور ZIP میں دے گا؛ Android APK الگ build مرحلے سے بنتی ہے۔</p><div className="summary"><b>ایپ کا آئیڈیا</b><p>{idea}</p><b>پلیٹ فارم</b><p>{platform}</p></div><div className="notice">یہ source ZIP ہے، تیار APK نہیں۔ APK بنانے کے لیے الگ Android build ضروری ہے۔</div></>}
         {notice && <div className="notice" role="status">{notice}</div>}
         <div className="actions">{step > 0 && <button className="secondary" onClick={back}>واپس</button>}{step < 2 ? <button className="primary" onClick={next}>اگلا مرحلہ <span>→</span></button> : <button className="primary" onClick={build} disabled={generating}>{generating ? "تیار ہو رہا ہے…" : "Source ZIP بنائیں"} <span>↓</span></button>}</div>
       </section>
