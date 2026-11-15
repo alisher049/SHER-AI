@@ -2,7 +2,7 @@ name: Build SHER AI Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, feature/chat-first-ui, feature/enable-image-generator]
+    branches: [main, feature/chat-first-ui, feature/enable-image-generator, feature/mobile-first-app-builder]
     paths:
       - "src/**"
       - "api/**"
