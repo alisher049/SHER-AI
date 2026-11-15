@@ -24,6 +24,11 @@ function AppContent({ accessToken, onSignOut }) {
   const [listening, setListening] = useState(false);
   const [imagePrompt, setImagePrompt] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [studioPrompt, setStudioPrompt] = useState("");
+  const [studioFiles, setStudioFiles] = useState(null);
+  const [studioBusy, setStudioBusy] = useState(false);
+  const [studioError, setStudioError] = useState("");
+  const [studioFile, setStudioFile] = useState("index.html");
 
   function next() {
     if (step === 0 && !idea.trim()) { setNotice("Please describe the app you want to create."); return; }
@@ -58,6 +63,74 @@ function AppContent({ accessToken, onSignOut }) {
     } catch (error) {
       setNotice(error.message || "Could not generate the project. Please try again.");
     } finally { setGenerating(false); }
+  }
+
+  function makeStudioPreview(files) {
+    if (!files || typeof files !== "object") return "";
+    const htmlPath = Object.keys(files).find(path => /(^|\/)index\.html$/i.test(path)) || Object.keys(files).find(path => /\.html$/i.test(path));
+    if (!htmlPath) return "";
+    let html = files[htmlPath];
+    const directory = htmlPath.includes("/") ? htmlPath.slice(0, htmlPath.lastIndexOf("/") + 1) : "";
+    const cssPath = Object.keys(files).find(path => path === directory + "styles.css" || path === "styles.css" || path.endsWith("/styles.css"));
+    const jsPath = Object.keys(files).find(path => path === directory + "app.js" || path === "app.js" || path.endsWith("/app.js"));
+    if (cssPath) {
+      const css = files[cssPath].replace(/<\/style/gi, "<\\/style");
+      if (/<\/head>/i.test(html)) html = html.replace(/<\/head>/i, "<style>" + css + "</style></head>");
+      else html = "<style>" + css + "</style>" + html;
+      html = html.replace(/<link\b[^>]*href=["'][^"']*styles\.css[^"']*["'][^>]*>/gi, "");
+    }
+    if (jsPath) {
+      const js = files[jsPath].replace(/<\/script/gi, "<\\/script");
+      const scriptTag = /<script\b[^>]*src=["'][^"']*app\.js[^"']*["'][^>]*>\s*<\/script>/i;
+      if (scriptTag.test(html)) html = html.replace(scriptTag, "<script>" + js + "<\\/script>");
+      else html = html.replace(/<\/body>/i, "<script>" + js + "<\\/script></body>");
+    }
+    return html;
+  }
+
+  async function generateStudio() {
+    const prompt = studioPrompt.trim();
+    if (!prompt || studioBusy) return;
+    setStudioBusy(true); setStudioError(""); setStudioFiles(null);
+    try {
+      const response = await fetch(API_BASE_URL + "/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + accessToken },
+        body: JSON.stringify({ idea: prompt, appName: "SHER AI Studio Project", platform: "Responsive Web App / Website" })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "پروجیکٹ تیار نہیں ہو سکا۔");
+      if (!result.files || typeof result.files !== "object" || Array.isArray(result.files)) throw new Error("درست project files موصول نہیں ہوئیں۔");
+      setStudioFiles(result.files);
+      const first = Object.keys(result.files).find(path => /index\.html$/i.test(path)) || Object.keys(result.files)[0];
+      setStudioFile(first || "index.html");
+    } catch (error) {
+      setStudioError(error.message || "SHER AI سے رابطہ نہیں ہو سکا۔");
+    } finally { setStudioBusy(false); }
+  }
+
+  async function downloadStudioProject() {
+    if (!studioFiles) return;
+    const zip = new JSZip();
+    Object.entries(studioFiles).forEach(([path, content]) => {
+      if (typeof content === "string" && !path.startsWith("/") && !path.split("/").includes("..")) zip.file(path, content);
+    });
+    const blob = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = "sher-ai-studio-project.zip";
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function copyStudioCode() {
+    if (!studioFiles || !studioFiles[studioFile]) return;
+    try {
+      await navigator.clipboard.writeText(studioFiles[studioFile]);
+      setStudioError("فائل کا کوڈ کاپی ہو گیا۔");
+    } catch {
+      setStudioError("کاپی کی اجازت نہیں ملی؛ کوڈ منتخب کرکے کاپی کریں۔");
+    }
   }
 
   async function attachImage(event) {
@@ -162,6 +235,7 @@ function AppContent({ accessToken, onSignOut }) {
     </header>
     <nav className="workspace-tabs" aria-label="SHER AI tools">
       <button className={view === "chat" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("chat")}>✦ AI چیٹ</button>
+      <button className={view === "studio" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("studio")}>⚡ Fast Studio</button>
       <button className={view === "builder" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("builder")}>▣ App Builder</button>
       <button className={view === "smart" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("smart")}>⚙ Smart Tools</button>
     </nav>
@@ -184,6 +258,23 @@ function AppContent({ accessToken, onSignOut }) {
         </div>
       </form>
       <p className="chat-footnote">تصاویر اور PDF دستاویزات Gemini کے ذریعے سمجھی جاتی ہیں۔ مائیک آواز کو تحریر میں بدلتا ہے؛ جواب سننے کے لیے ہر AI جواب کے ساتھ اسپیکر بٹن استعمال کریں۔</p>
+    </section>}
+
+    {view === "studio" && <section className="panel tool-panel studio-panel">
+      <div className="panel-icon">⚡</div><div className="kicker">FAST APP & WEBSITE STUDIO</div>
+      <h2>اپنا آئیڈیا لائیو ویب ایپ میں بدلیں</h2>
+      <p className="muted">تفصیل لکھیں؛ SHER AI HTML، CSS اور JavaScript فائلیں بنائے گا۔ تیار ہونے پر Live Preview دیکھیں، کوڈ کاپی کریں یا ZIP ڈاؤن لوڈ کریں۔</p>
+      <label htmlFor="studioPrompt">آپ کیا بنانا چاہتے ہیں؟</label>
+      <textarea id="studioPrompt" rows="5" maxLength="6000" value={studioPrompt} onChange={e=>setStudioPrompt(e.target.value)} placeholder="مثلاً ایک جدید آن لائن اسٹور بنائیں، پروڈکٹ سرچ، کارٹ، موبائل ڈیزائن اور چیک آؤٹ ڈیمو کے ساتھ..."/>
+      <div className="smart-actions"><button className="primary" type="button" onClick={generateStudio} disabled={studioBusy || !studioPrompt.trim()}>{studioBusy ? "تیار ہو رہا ہے…" : "⚡ بنائیں اور Preview دیکھیں"}</button></div>
+      {studioError && <div className="notice" role="status">{studioError}</div>}
+      {studioFiles && <>
+        <div className="studio-toolbar"><strong>Live Preview</strong><button className="secondary" type="button" onClick={downloadStudioProject}>ZIP ڈاؤن لوڈ</button></div>
+        {makeStudioPreview(studioFiles) ? <iframe className="studio-preview" title="SHER AI live website preview" sandbox="allow-scripts" srcDoc={makeStudioPreview(studioFiles)}/> : <div className="notice">پروجیکٹ میں index.html نہیں ملی؛ کوڈ فائلوں میں موجود ہے، مگر Preview نہیں بن سکا۔</div>}
+        <div className="studio-toolbar"><strong>Source Code</strong><button className="secondary" type="button" onClick={copyStudioCode}>کوڈ کاپی کریں</button></div>
+        <div className="studio-files"><div className="studio-file-list">{Object.keys(studioFiles).map(path=><button key={path} type="button" className={studioFile===path?"studio-file active":"studio-file"} onClick={()=>setStudioFile(path)}>{path}</button>)}</div><pre className="studio-code" dir="ltr"><code>{studioFiles[studioFile] || ""}</code></pre></div>
+        <p className="chat-footnote">یہ Live Preview براؤزر کے اندر چلتا ہے۔ ZIP میں source code ہے؛ مکمل native Android APK یا backend hosting خودکار طور پر تیار نہیں ہوتے۔</p>
+      </>}
     </section>}
 
     {view === "builder" && <>
