@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const steps = ["Describe", "Customize", "Build"]; // Mobile-first App Builder release
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "https://sher-ai-swart.vercel.app").replace(/\/$/, "");
-const APP_VERSION = import.meta.env.VITE_APP_VERSION || "1.1.0";
+const APP_VERSION = import.meta.env.VITE_APP_VERSION || "1.2.0";
 function AppContent({ accessToken, onSignOut }) {
   const [step, setStep] = useState(0);
   const [idea, setIdea] = useState("");
@@ -72,6 +72,17 @@ function AppContent({ accessToken, onSignOut }) {
   function refreshUpdatedApp() {
     window.location.reload();
   }
+
+  useEffect(() => {
+    checkForUpdates();
+    const interval = window.setInterval(() => checkForUpdates(), 15 * 60 * 1000);
+    const onFocus = () => checkForUpdates();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
 
   function next() {
     if (step === 0 && !idea.trim()) { setNotice("Please describe the app you want to create."); return; }
@@ -366,14 +377,15 @@ function AppContent({ accessToken, onSignOut }) {
       <div className="panel-icon">⬆</div>
       <div className="kicker">SHER AI UPDATE CENTER</div>
       <h2>خودکار اپ گریڈ سینٹر</h2>
-      <p className="muted">SHER AI نئی ویب اپ ڈیٹس چیک کرے گا۔ نئی APK دستیاب ہونے پر اسے Android کی اجازت کے ساتھ انسٹال کیا جا سکتا ہے۔</p>
+      <p className="muted">SHER AI کھلتے ہی، ہر 15 منٹ بعد، اور ایپ دوبارہ فعال ہونے پر نئی اپ ڈیٹ چیک کرے گا۔ نئی APK دستیاب ہونے پر ڈاؤن لوڈ کا بٹن دکھائے گا؛ انسٹالیشن آپ کی اجازت سے ہوگی۔</p>
       <div className="smart-card">
         <h3>موجودہ ورژن</h3>
         <p className="tool-result" dir="ltr">v{APP_VERSION}</p>
         <h3 style={{marginTop:"14px"}}>تازہ ترین دستیاب ورژن</h3>
         <p className="tool-result" dir="ltr">{latestVersion ? "v" + latestVersion : "ابھی چیک نہیں کیا"}</p>
         <button className="primary" type="button" disabled={checkingUpgrade} onClick={checkForUpdates}>{checkingUpgrade ? "چیک ہو رہا ہے…" : "ابھی اپ ڈیٹ چیک کریں"}</button>
-        <button className="secondary" type="button" style={{marginLeft:"8px"}} onClick={refreshUpdatedApp}>ایپ ریفریش کریں</button>
+        {latestVersion && latestVersion !== APP_VERSION && <a className="primary" href="https://github.com/alisher049/SHER-AI/actions/workflows/android-apk.yml" target="_blank" rel="noreferrer" style={{display:"inline-block",textDecoration:"none",marginTop:"10px",padding:"12px 16px",borderRadius:"10px"}}>نئی APK ڈاؤن لوڈ کریں · v{latestVersion}</a>}
+        <button className="secondary" type="button" style={{marginLeft:"8px"}} onClick={refreshUpdatedApp}>ویب ایپ ریفریش کریں</button>
         <p className="tool-result" role="status">{upgradeStatus}</p>
       </div>
       <div className="smart-card">
