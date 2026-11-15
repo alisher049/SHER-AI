@@ -457,7 +457,7 @@ export default function App() {
     event.preventDefault();
     if (!supabase || busy) return;
     const cleanEmail = email.trim().toLowerCase();
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(cleanEmail)) { setAuthError(t.invalid); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) { setAuthError(t.invalid); return; }
     if (cleanEmail !== OWNER_EMAIL) { setAuthError("یہ SHER AI صرف مالک کے Gmail اکاؤنٹ کے لیے ہے۔"); return; }
     setEmail(cleanEmail); setBusy(true); setAuthError(""); setAuthMessage("");
     try {
@@ -470,8 +470,8 @@ export default function App() {
         setOtpSent(true);
         setAuthMessage("6 ہندسوں کا کوڈ آپ کے Gmail پر بھیج دیا گیا ہے۔ Inbox اور Spam دونوں چیک کریں۔");
       } else {
-        const cleanOtp = otp.replace(/\\s/g, "");
-        if (!/^\\d{6}$/.test(cleanOtp)) throw new Error("براہِ کرم 6 ہندسوں کا درست کوڈ درج کریں۔");
+        const cleanOtp = otp.replace(/\s/g, "");
+        if (!/^\d{6}$/.test(cleanOtp)) throw new Error("براہِ کرم 6 ہندسوں کا درست کوڈ درج کریں۔");
         const { data, error } = await supabase.auth.verifyOtp({ email: cleanEmail, token: cleanOtp, type: "email" });
         if (error) throw error;
         if (data.session?.user?.email?.toLowerCase() === OWNER_EMAIL) setSession(data.session);
