@@ -16,6 +16,11 @@ function AppContent({ accessToken, onSignOut }) {
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+  const [toolText, setToolText] = useState("");
+  const [toolResult, setToolResult] = useState("");
+  const [toolBusy, setToolBusy] = useState(false);
+  const [calculator, setCalculator] = useState("12 * 8");
+  const [calculatorResult, setCalculatorResult] = useState("");
   const [listening, setListening] = useState(false);
   const [imagePrompt, setImagePrompt] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -71,7 +76,7 @@ function AppContent({ accessToken, onSignOut }) {
     event.target.value = "";
   }
 
-  function startVoiceInput() {
+  function speakText(text) {\n    if (!("speechSynthesis" in window)) { setChatError("اس براؤزر میں آواز سے پڑھنے کی سہولت دستیاب نہیں۔"); return; }\n    window.speechSynthesis.cancel();\n    const utterance = new SpeechSynthesisUtterance(text);\n    utterance.lang = /[\\u0600-\\u06FF]/.test(text) ? "ur-PK" : "en-US";\n    window.speechSynthesis.speak(utterance);\n  }\n\n  async function runSmartTool() {\n    const text = toolText.trim();\n    if (!text || toolBusy) return;\n    setToolBusy(true); setToolResult("");\n    try {\n      const response = await fetch(API_BASE_URL + "/api/chat", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + accessToken }, body: JSON.stringify({ messages: [{ role: "user", content: text }] }) });\n      const result = await response.json().catch(() => ({}));\n      if (!response.ok) throw new Error(result.error || "AI tool request failed.");\n      setToolResult(result.answer || "کوئی جواب موصول نہیں ہوا۔");\n    } catch (error) { setToolResult(error.message || "درخواست مکمل نہیں ہو سکی۔"); }\n    finally { setToolBusy(false); }\n  }\n\n  function calculate() {\n    const expression = calculator.trim();\n    if (!expression || !/^[0-9+\\-*/().%\\s]+$/.test(expression)) { setCalculatorResult("صرف اعداد اور + − × ÷ ( ) استعمال کریں۔"); return; }\n    try { const value = Function("\\\"use strict\\\"; return (" + expression + ")")(); setCalculatorResult(Number.isFinite(value) ? String(value) : "درست حساب درج کریں۔"); }\n    catch { setCalculatorResult("حساب درست نہیں۔"); }\n  }\n\n  function startVoiceInput() {
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Speech) { setChatError("آپ کے براؤزر میں voice typing دستیاب نہیں۔ Chrome میں دوبارہ کوشش کریں۔"); return; }
     const recognition = new Speech();
@@ -123,27 +128,27 @@ function AppContent({ accessToken, onSignOut }) {
     <nav className="workspace-tabs" aria-label="SHER AI tools">
       <button className={view === "chat" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("chat")}>✦ AI چیٹ</button>
       <button className={view === "builder" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("builder")}>▣ App Builder</button>
-      <button className={view === "images" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("images")}>✧ Image Generator</button>
+      <button className={view === "smart" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("smart")}>⚙ Smart Tools</button>
     </nav>
 
     {view === "chat" && <section className="chat-panel">
       <div className="chat-heading"><div className="chat-avatar">✦</div><div><div className="kicker">SHER AI ASSISTANT</div><h1>آپ کا AI اسسٹنٹ</h1><p className="muted">اردو یا English میں کچھ بھی پوچھیں</p></div></div>
       <div className="chat-messages" aria-live="polite">
         {chatMessages.length === 0 && <div className="chat-welcome"><b>السلام علیکم! 👋</b><p>میں SHER AI ہوں۔ آپ سوال پوچھ سکتے ہیں، آئیڈیاز پر بات کر سکتے ہیں یا اپنی تصویر دکھا کر اس کے بارے میں پوچھ سکتے ہیں۔</p><div className="suggestion-chips"><button type="button" onClick={() => setChatInput("مجھے ایک نئی موبائل ایپ بنانے میں مدد دیں۔")}>ایپ بنانے میں مدد</button><button type="button" onClick={() => setChatInput("Explain artificial intelligence in simple words.")}>AI کیا ہے؟</button><button type="button" onClick={() => setChatInput("آج مجھے کوئی نئی چیز سکھائیں۔")}>کچھ نیا سکھائیں</button></div></div>}
-        {chatMessages.map((message, index) => <div className={"chat-bubble " + (message.role === "user" ? "user" : "assistant")} key={index}><span>{message.role === "user" ? "آپ" : "SHER AI"}</span><p>{message.content}</p></div>)}
+        {chatMessages.map((message, index) => <div className={"chat-bubble " + (message.role === "user" ? "user" : "assistant")} key={index}><span>{message.role === "user" ? "آپ" : "SHER AI"}</span><p>{message.content}</p>{message.role === "assistant" && <button type="button" className="speak-button" onClick={() => speakText(message.content)} aria-label="جواب سنیں">🔊 سنیں</button>}</div>)}
         {chatLoading && <div className="chat-bubble assistant"><span>SHER AI</span><p>سوچ رہا ہوں…</p></div>}
       </div>
       {chatError && <div className="notice" role="alert">{chatError}</div>}
-      {selectedImage && <div className="attachment-preview"><img src={selectedImage.dataUrl} alt="منتخب کردہ تصویر"/><span>{selectedImage.name}</span><button type="button" onClick={() => setSelectedImage(null)} aria-label="Remove image">×</button></div>}
+      {selectedImage && <div className="attachment-preview">{selectedImage.mimeType === "application/pdf" ? <span className="pdf-icon">PDF</span> : <img src={selectedImage.dataUrl} alt="منتخب کردہ تصویر"/>}<span>{selectedImage.name}</span><button type="button" onClick={() => setSelectedImage(null)} aria-label="Remove file">×</button></div>}
       <form className="chat-form" onSubmit={sendChat}>
         <div className="chat-composer">
-          <label className="tool-icon" title="تصویر اپ لوڈ کریں">＋<input type="file" accept="image/jpeg,image/png,image/webp" onChange={attachImage} hidden /></label>
+          <label className="tool-icon" title="تصویر یا PDF اپ لوڈ کریں">＋<input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={attachImage} hidden /></label>
           <textarea rows="2" maxLength="4000" value={chatInput} onChange={event => setChatInput(event.target.value)} placeholder="اپنا پیغام لکھیں..." aria-label="Your message" />
           <button className={listening ? "tool-icon listening" : "tool-icon"} type="button" onClick={startVoiceInput} title="مائیک سے بولیں" aria-label="Voice input">🎙</button>
           <button className="send-button" type="submit" disabled={chatLoading || (!chatInput.trim() && !selectedImage)} aria-label="Send message">{chatLoading ? "…" : "↑"}</button>
         </div>
       </form>
-      <p className="chat-footnote">تصویر سمجھنے کی سہولت Gemini کے ذریعے محفوظ سرور پر چلتی ہے۔ مائیک بٹن آواز کو تحریر میں تبدیل کرتا ہے؛ اس کے لیے براؤزر کی اجازت درکار ہو سکتی ہے۔</p>
+      <p className="chat-footnote">تصاویر اور PDF دستاویزات Gemini کے ذریعے سمجھی جاتی ہیں۔ مائیک آواز کو تحریر میں بدلتا ہے؛ جواب سننے کے لیے ہر AI جواب کے ساتھ اسپیکر بٹن استعمال کریں۔</p>
     </section>}
 
     {view === "builder" && <>
@@ -158,7 +163,7 @@ function AppContent({ accessToken, onSignOut }) {
       </section>
     </>}
 
-    {view === "images" && <section className="panel tool-panel"><div className="panel-icon">✧</div><div className="kicker">SHER AI CREATIVE STUDIO</div><h2>Image Generator</h2><p className="muted">اپنی مطلوبہ تصویر کی تفصیل لکھیں۔</p><label htmlFor="imagePrompt">تصویر کی تفصیل</label><textarea id="imagePrompt" rows="4" value={imagePrompt} onChange={e=>setImagePrompt(e.target.value)} placeholder="مثلاً برفیلے پہاڑوں کے درمیان ایک خوبصورت گھر، cinematic style..."/><div className="notice">Image Generator کا انٹرفیس شامل ہے، لیکن تصویر بنانے کا API ابھی اس GitHub پروجیکٹ میں موجود نہیں۔ اسے فعال کرنے کے لیے الگ image-generation backend اور model کی ترتیب درکار ہے۔</div><button className="primary" type="button" disabled={!imagePrompt.trim()}>تصویر بنائیں — جلد دستیاب ہوگا</button></section>}
+    {view === "smart" && <section className="panel tool-panel"><div className="panel-icon">⚙</div><div className="kicker">PERSONAL PRODUCTIVITY</div><h2>اسمارٹ ٹولز</h2><div className="smart-card"><h3>تیز حساب کتاب</h3><p className="muted">جمع، تفریق، ضرب، تقسیم اور فیصد کے لیے۔</p><input value={calculator} onChange={e=>setCalculator(e.target.value)} dir="ltr" placeholder="مثلاً 1200 * 3"/><button className="primary" type="button" onClick={calculate}>حساب کریں</button>{calculatorResult && <p className="tool-result">نتیجہ: {calculatorResult}</p>}</div><div className="smart-card"><h3>تحریر، ترجمہ اور خلاصہ</h3><p className="muted">متن لکھیں اور SHER AI سے ترجمہ، اصلاح یا خلاصہ کروائیں۔</p><textarea rows="4" value={toolText} onChange={e=>setToolText(e.target.value)} placeholder="مثلاً اس عبارت کا اردو میں ترجمہ کریں..."/><div className="smart-actions"><button className="secondary" type="button" onClick={()=>setToolText("اس متن کا اردو میں ترجمہ کریں:\\n"+toolText)}>اردو ترجمہ</button><button className="secondary" type="button" onClick={()=>setToolText("اس تحریر کو بہتر اور پروفیشنل بنائیں:\\n"+toolText)}>تحریر بہتر کریں</button><button className="primary" type="button" disabled={toolBusy || !toolText.trim()} onClick={runSmartTool}>{toolBusy ? "کام ہو رہا ہے…" : "SHER AI سے پوچھیں"}</button></div>{toolResult && <div className="tool-result"><p>{toolResult}</p><button type="button" className="speak-button" onClick={()=>speakText(toolResult)}>🔊 جواب سنیں</button></div>}</div><div className="smart-card"><h3>App Builder</h3><p className="muted">تین مراحل والا ایپ بلڈر الگ ٹیب میں دستیاب ہے۔</p><button className="secondary" type="button" onClick={()=>{setView("builder");setStep(0);}}>App Builder کھولیں</button></div></section>}\n\n    {view === "images" && <section className="panel tool-panel"><div className="panel-icon">✧</div><div className="kicker">SHER AI CREATIVE STUDIO</div><h2>Image Generator</h2><p className="muted">اپنی مطلوبہ تصویر کی تفصیل لکھیں۔</p><label htmlFor="imagePrompt">تصویر کی تفصیل</label><textarea id="imagePrompt" rows="4" value={imagePrompt} onChange={e=>setImagePrompt(e.target.value)} placeholder="مثلاً برفیلے پہاڑوں کے درمیان ایک خوبصورت گھر، cinematic style..."/><div className="notice">Image Generator کا انٹرفیس شامل ہے، لیکن تصویر بنانے کا API ابھی اس GitHub پروجیکٹ میں موجود نہیں۔ اسے فعال کرنے کے لیے الگ image-generation backend اور model کی ترتیب درکار ہے۔</div><button className="primary" type="button" disabled={!imagePrompt.trim()}>تصویر بنائیں — جلد دستیاب ہوگا</button></section>}
 
     <footer><span>SHER AI</span><span>آپ کا اپنا AI اسسٹنٹ</span></footer>
   </main>;
