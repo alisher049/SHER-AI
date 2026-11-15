@@ -96,7 +96,7 @@ function AppContent({ accessToken, onSignOut }) {
       const response = await fetch(API_BASE_URL + "/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + accessToken },
-        body: JSON.stringify({ idea: prompt, appName: "SHER AI Studio Project", platform: "Responsive Web App / Website" })
+        body: JSON.stringify({ idea: prompt, appName: "SHER AI Studio Project", platform: "Responsive Web App / Website", studioMode: true })
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "پروجیکٹ تیار نہیں ہو سکا۔");
