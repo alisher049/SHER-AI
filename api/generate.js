@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   const user = await requireUser(req);
   if (!user?.id) return json(res, 401, { error: "Please sign in to generate projects." });
 
-  const { idea, appName, platform } = req.body || {};
+  const { idea, appName, platform, studioMode } = req.body || {};
   if (typeof idea !== "string" || !idea.trim() || idea.length > 6000) {
     return json(res, 400, { error: "Describe your app in 1 to 6,000 characters." });
   }
@@ -31,10 +31,12 @@ export default async function handler(req, res) {
     const outputText = await generateWithGemini({
       system: [
         "You are the senior engineer for SHER AI.",
-        "Generate a useful, runnable starter project based on the user's app idea.",
+        studioMode
+          ? "Build a polished, immediately previewable, mobile-first website or browser app from the idea. The main entry point MUST be index.html at the project root, with styles.css and app.js at the project root. Use vanilla HTML, CSS and JavaScript so preview runs without installing packages."
+          : "Generate a useful, runnable starter project from the app idea.",
         "Return ONLY a valid JSON object with one property named files. files must map relative file paths to complete UTF-8 text file contents.",
         "Prefer a simple responsive HTML/CSS/JavaScript project unless the user explicitly requests a framework.",
-        "Include index.html, styles.css, app.js, and README.md when suitable.",
+        "For studioMode, always include complete index.html, styles.css, app.js and README.md. Link styles.css and app.js using relative paths. Implement all visible buttons and core interactions in app.js. Do not use external libraries or remote assets; create a self-contained demo with polished styling.",
         "Do not include binary files, secrets, API keys, absolute paths, or paths containing ..",
         "Keep the result compact: no more than 10 files and no more than about 18,000 total characters.",
         "Make buttons and core interactions functional. Do not pretend frontend mockups have real backend services.",
