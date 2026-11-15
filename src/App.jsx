@@ -99,9 +99,16 @@ function AppContent({ accessToken, onSignOut }) {
 
   function calculate() {
     const expression = calculator.trim();
-    if (!expression || !/^[0-9+\\-*/().%\\s]+$/.test(expression)) { setCalculatorResult("صرف اعداد اور + − × ÷ ( ) استعمال کریں۔"); return; }
-    try { const value = Function("\\\"use strict\\\"; return (" + expression + ")")(); setCalculatorResult(Number.isFinite(value) ? String(value) : "درست حساب درج کریں۔"); }
-    catch { setCalculatorResult("حساب درست نہیں۔"); }
+    if (!expression || !/^[0-9+\-*/().%\s]+$/.test(expression)) {
+      setCalculatorResult("صرف اعداد اور + − × ÷ ( ) استعمال کریں۔");
+      return;
+    }
+    try {
+      const value = Function("return (" + expression + ")")();
+      setCalculatorResult(Number.isFinite(value) ? String(value) : "درست حساب درج کریں۔");
+    } catch {
+      setCalculatorResult("حساب درست نہیں۔");
+    }
   }
 
   function startVoiceInput() {
