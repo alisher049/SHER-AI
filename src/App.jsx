@@ -3,6 +3,7 @@ import JSZip from "jszip";
 import { createClient } from "@supabase/supabase-js";
 
 const steps = ["Describe", "Customize", "Build"];
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "https://sher-ai-swart.vercel.app").replace(/\\/$/, "");
 function AppContent({ accessToken, onSignOut }) {
   const [step, setStep] = useState(0);
   const [idea, setIdea] = useState("");
@@ -26,7 +27,7 @@ function AppContent({ accessToken, onSignOut }) {
     setGenerating(true);
     setNotice("");
     try {
-      const response = await fetch("/api/generate", {
+      const response = await fetch(`${API_BASE_URL}/api/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -72,7 +73,7 @@ function AppContent({ accessToken, onSignOut }) {
     setChatError("");
     setChatLoading(true);
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
