@@ -39,7 +39,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model,
         input: "Generate one high-quality image from this description. Return the image, not only a description. Prompt: " + prompt.trim(),
-        response_format: { type: "image", mime_type: "image/png", aspect_ratio: "1:1", image_size: "1K" }
+        response_format: { type: "image", mime_type: "image/jpeg", aspect_ratio: "1:1", image_size: "1K" }
       })
     });
 
@@ -49,8 +49,9 @@ export default async function handler(req, res) {
       return json(res, response.status === 429 ? 429 : 502, { error: message });
     }
 
-    const imageData = data.output_image?.data;
-    const mimeType = data.output_image?.mime_type || "image/png";
+    const imagePart = data.output_image || (data.steps || []).flatMap(step => step.content || []).find(part => part.type === "image" && part.data);
+    const imageData = imagePart?.data;
+    const mimeType = imagePart?.mime_type || "image/jpeg";
     if (!imageData || !/^image\/(png|jpeg|webp)$/.test(mimeType)) {
       return json(res, 502, { error: "AI نے تصویر واپس نہیں کی۔ ماڈل، اکاؤنٹ کی دستیابی اور Google API کی حدود چیک کریں۔" });
     }
