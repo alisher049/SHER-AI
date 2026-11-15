@@ -409,8 +409,8 @@ export default function App() {
   async function submitAuth(event) {
     event.preventDefault();
     if (!supabase || busy) return;
-    const cleanEmail = email.replace(/[\\u200B-\\u200D\\uFEFF]/g, "").trim().toLowerCase();
-    if (!/^[a-z0-9.!#$%&\\'*+/=?^_`{|}~-]+@gmail\\.com$/i.test(cleanEmail)) { setAuthError(t.invalid); return; }
+    const cleanEmail = email.replace(/[\u200B-\u200D\uFEFF]/g, "").trim().toLowerCase();
+    if (!/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@gmail\.com$/i.test(cleanEmail)) { setAuthError(t.invalid); return; }
     if (cleanEmail !== OWNER_EMAIL) { setAuthError("یہ SHER AI صرف مالک کے Gmail اکاؤنٹ کے لیے ہے۔"); return; }
     setEmail(cleanEmail);
     setBusy(true); setAuthError(""); setAuthMessage("");
