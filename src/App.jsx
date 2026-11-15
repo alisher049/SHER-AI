@@ -503,7 +503,7 @@ export default function App() {
       <img className="brain auth-brain" src="/icons/sher-ai-mark.svg" alt="SHER AI" style={{width:"76px",height:"76px",objectFit:"contain"}} /><div className="kicker">SHER AI ACCOUNT</div>
       <h1>{t.welcome}</h1>
       <p className="auth-subtitle">{t.subtitle}</p>
-      {!supabase ? <div className="notice">سائن اَپ ابھی فعال نہیں ہوا۔ منتظم کو Supabase کی سیٹنگز شامل کرنی ہوں گی۔</div> :
+      {!supabase ? <div className="notice">سائن اَپ ابھی فعال نہیں ہوا۔ منتظم کو Supabase کی سیٹنگز شامل کرنی ہوں گی۔</div> : <>
       <form onSubmit={submitAuth} className="auth-form">
         <label htmlFor="auth-email">{t.email}</label>
         <input id="auth-email" type="email" autoComplete="email" dir="ltr" value={email} onChange={e=>setEmail(e.target.value)} placeholder="alishermeo049@gmail.com" required disabled={busy} />
@@ -519,6 +519,7 @@ export default function App() {
       {authMessage && <div className="auth-success" role="status">{authMessage}</div>}
       {authError && <div className="notice" role="alert">{authError}</div>}
       <p className="auth-footnote">صرف مالک کا Gmail اکاؤنٹ استعمال ہوگا۔ Supabase میں Email Confirmations بند رکھیں تاکہ لاگ اِن صرف Email + Password سے ہو۔<br/>ایپ انسٹال کرنے کے لیے Chrome کے ⋮ مینو میں “Install app” یا “Add to Home screen” منتخب کریں۔</p>
+      </>
     </section>
     </>
   </main>;
