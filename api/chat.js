@@ -37,6 +37,18 @@ export default async function handler(req, res) {
     });
   }
 
+  const image = req.body?.image;
+  if (image !== undefined) {
+    if (!image || !["image/jpeg", "image/png", "image/webp"].includes(image.mimeType) ||
+        typeof image.data !== "string" || image.data.length > 4_000_000 ||
+        !/^[A-Za-z0-9+/]+={0,2}$/.test(image.data)) {
+      return json(res, 400, { error: "تصویر درست نہیں یا 3 MB سے بڑی ہے۔ JPG، PNG یا WEBP استعمال کریں۔" });
+    }
+    const last = safeMessages[safeMessages.length - 1];
+    if (last.role !== "user") return json(res, 400, { error: "تصویر کے ساتھ آخری پیغام صارف کا ہونا چاہیے۔" });
+    last.parts.push({ inlineData: { mimeType: image.mimeType, data: image.data } });
+  }
+
   try {
     const answer = await generateWithGemini({
       system: "You are SHER AI, a helpful AI assistant inside a mobile app builder. Help users plan and build apps. Reply in the language the user uses, especially Urdu or Roman Urdu when appropriate. Be accurate, concise, and honest. Never claim an app, APK, upload, or external action was completed unless it actually was. Never reveal API keys, secrets, or server configuration.",
