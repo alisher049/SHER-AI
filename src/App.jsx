@@ -42,7 +42,7 @@ function AppContent({ accessToken, onSignOut }) {
     setCheckingUpgrade(true);
     setUpgradeStatus("نئی اپ ڈیٹ تلاش کی جا رہی ہے…");
     try {
-      const response = await fetch("/app-version.json?check=" + Date.now(), { cache: "no-store" });
+      const response = await fetch(API_BASE_URL + "/app-version.json?check=" + Date.now(), { cache: "no-store" });
       if (!response.ok) throw new Error("اپ ڈیٹ سرور سے رابطہ نہیں ہو سکا۔");
       const manifest = await response.json();
       if (!manifest.version) throw new Error("اپ ڈیٹ کی معلومات درست نہیں ہیں۔");
