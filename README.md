@@ -1,58 +1,74 @@
 # SHER AI
 
-SHER AI is a mobile-first AI app builder with a React/Vite frontend, Supabase email/password sign-in, secure Google Gemini API routes, and an installable PWA.
+SHER AI is a mobile-first personal AI assistant and app-building workspace. It uses React/Vite, Supabase email OTP authentication, server-side Google Gemini API routes, and Capacitor for Android packaging.
 
-## AI setup (Google Gemini)
+## Owner-only Gmail sign-in
 
-SHER AI sends AI requests to its Vercel serverless API routes:
+- The app is restricted to the owner Gmail account configured in `src/App.jsx` and `lib/server/auth.js`.
+- Sign-in uses a Gmail address and a six-digit email verification code. No app password is requested.
+- Supabase handles OTP delivery and verification. In Supabase, enable the Email provider and configure **Authentication → Email Templates → Confirm signup** to include `{{ .Token }}` (not only `{{ .ConfirmationURL }}`). Confirm that email delivery/SMTP is configured.
+- The owner must verify the code in the app. Never share Gmail passwords, verification codes, service-role keys, or API secrets.
+- If the owner email changes, update both frontend and server-side owner checks together.
 
-- `POST /api/chat` — AI assistant chat.
-- `POST /api/generate` — starter source-project generation.
-- `POST /api/image` — authenticated Gemini image generation; set `GEMINI_IMAGE_MODEL` to an image-capable Gemini model if needed.
-- Shared server helpers: `lib/server/auth.js` and `lib/server/gemini.js` (kept outside `api/` so Vercel does not expose them as API routes).
+## Features currently present in the source
 
-Set `GEMINI_API_KEY` in Vercel → Project → Settings → Environment Variables. Keep it server-side: never add it to a `VITE_*` variable, frontend code, GitHub source, or the Android APK. The default model is `gemini-3.8-flash`; optionally set `GEMINI_MODEL` to another model enabled for your Google AI Studio project.
+1. Urdu/English sign-in interface and owner-only access check.
+2. AI chat using the server-side `POST /api/chat` route.
+3. Image and PDF attachment handling in chat (JPG, PNG, WEBP, PDF; 2.5 MB client-side limit).
+4. Voice typing through browser speech recognition where supported.
+5. Read-aloud using browser speech synthesis where supported.
+6. Smart tools for arithmetic, translation, rewriting, and summarization.
+7. AI image generation through `POST /api/image`.
+8. Fast Studio for generated HTML/CSS/JavaScript, in-browser preview, code copy, and source ZIP export.
+9. Three-step App Builder (Describe → Customize → Build) that generates a mobile-first starter source ZIP.
+10. PWA manifest, app icon, service worker, and Capacitor Android build workflow.
 
-The API routes verify the user's Supabase access token before calling Gemini. They return clear errors if the key is missing, invalid, or over quota. Image generation uses `GEMINI_IMAGE_MODEL` (default `gemini-3.1-flash-image`) and the same server-only `GEMINI_API_KEY`; model access and Google usage charges/quotas depend on the Google AI account.
+## AI configuration
 
-## Supabase sign-in
+Set these in Vercel → Project → Settings → Environment Variables, then redeploy:
 
-Supabase handles Gmail/password registration, six-digit email OTP verification, and login. The application and both server-side AI endpoints restrict access to the owner Gmail account configured in `src/App.jsx` and `lib/server/auth.js`; update both locations together if the owner account ever changes. The project URL and Publishable Key are public client settings, not AI credentials. The app contains its current public project configuration as a fallback. If you change projects, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for the frontend build and `SUPABASE_URL` and `SUPABASE_ANON_KEY` for the Vercel API routes. Enable the Email provider in Supabase. To use the six-digit code screen, open Authentication → Email Templates → Confirm signup and use `{{ .Token }}` in the message body (not only `{{ .ConfirmationURL }}`); save the template and confirm SMTP/email delivery is configured. The app verifies the code with Supabase `verifyOtp` and supports resending it. Never use a service-role key in frontend code or the APK.
+- `GEMINI_API_KEY` — server-only Google Gemini API key.
+- `GEMINI_MODEL` — optional text model override (default: `gemini-3.8-flash`).
+- `GEMINI_IMAGE_MODEL` — optional image model override (default: `gemini-nano-banana-2.1`).
+- `SUPABASE_URL` and `SUPABASE_ANON_KEY` — server-side Supabase public project configuration.
+- `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` — frontend Supabase public project configuration.
+- `VITE_API_BASE_URL` — optional deployed API base URL for Android/web builds.
 
-## Main features
+Keep `GEMINI_API_KEY` server-side. Never place it in a `VITE_*` variable, frontend bundle, APK, or source control. Do not use a Supabase service-role key in frontend code.
 
-1. Describe an app idea in Urdu, Hindi, or English.
-2. Choose an app name and target platform.
-3. Ask Gemini to generate a starter source project and download it as a ZIP.
-4. Chat with SHER AI in Urdu or English.
-5. Sign in with Gmail and a user-created password using Supabase.
-6. Install the web app on supported mobile browsers as a PWA.
+API routes:
+- `POST /api/chat` — owner-authenticated AI assistant.
+- `POST /api/generate` — owner-authenticated app/source generation.
+- `POST /api/image` — owner-authenticated image generation.
 
-## Run locally
+## Three-step App Builder: important scope
+
+The builder currently generates a **starter source-code ZIP**, not a compiled native APK. Fast Studio generates a browser-previewable website/app and source ZIP. These generated projects still need review, testing, and hosting before production use. The App Builder does not currently compile each generated project into an APK automatically.
+
+## Video generation
+
+A video-generation feature is not currently implemented in this source version.
+
+## PWA and Android
+
+- PWA installation requires a deployed HTTPS site and a supported Android browser.
+- The GitHub Actions workflow builds a **debug APK** for testing. It is not a signed Play Store release.
+- After a successful workflow run, download the `sher-ai-debug-apk` artifact from that run.
+- Frontend changes require a fresh build and a new APK to update the installed native app.
+
+## Build locally
 
 ```bash
 npm install
-npm run dev
+npm run build
 ```
 
-The AI API routes run on Vercel. For local API development, use the Vercel CLI and provide the environment variables above.
+The Vercel API routes require the environment variables above. Local API development can use the Vercel CLI.
 
-## Vercel deployment
+## Limitations and checks still required
 
-The root `vercel.json` configures the Vite build output. Vercel automatically detects the serverless handlers in `api/chat.js`, `api/generate.js`, and `api/image.js`; do not add stale `functions` path patterns for files that do not exist.
-
-After changing Environment Variables, redeploy the latest deployment so the serverless functions receive the updated values.
-
-## Installable PWA
-
-The project includes a web app manifest, app icon, and service worker. On supported Android browsers, open the deployed HTTPS website and choose **Install app** or **Add to Home screen**. The service worker checks the network first for page navigations, so deployed PWA updates load from Vercel. The Capacitor APK bundles its web assets; after frontend changes, build and install a new APK to update the native app.
-
-## Android APK
-
-The GitHub Actions workflow builds a debug APK for testing and configures the app to call the deployed Vercel API (override with the `VITE_API_BASE_URL` Actions variable if the deployment domain changes). After a successful run, download the `sher-ai-debug-apk` artifact from the workflow run. This is not a signed Play Store release.
-
-## Important limitations
-
-- Gemini free-tier quotas and rate limits depend on the model and Google's current policies; unlimited free use is not guaranteed.
-- The generated ZIP is a starter source project, not a guaranteed production-ready app or an automatically compiled APK. Review and test generated code before publishing.
-- Never place private AI API keys or Supabase service-role secrets in frontend code, Android assets, or source control.
+- A successful GitHub Actions build confirms compilation and APK packaging, not successful real-world Gmail delivery, Gemini API access, image generation, or physical-phone behavior.
+- Supabase six-digit OTP email template and SMTP delivery must be tested with the owner's Gmail account.
+- Gemini quotas, model access, rate limits, and charges depend on the Google AI account and current Google policies. Unlimited free usage is not guaranteed.
+- Voice input and read-aloud depend on Android browser/device support and permissions.
+- Generated source code is a starting point, not a guarantee of production-ready software.
