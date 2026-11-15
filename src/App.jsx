@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const steps = ["Describe", "Customize", "Build"]; // Mobile-first App Builder release
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "https://sher-ai-swart.vercel.app").replace(/\/$/, "");
+const APP_VERSION = import.meta.env.VITE_APP_VERSION || "1.1.0";
 function AppContent({ accessToken, onSignOut }) {
   const [step, setStep] = useState(0);
   const [idea, setIdea] = useState("");
@@ -32,6 +33,45 @@ function AppContent({ accessToken, onSignOut }) {
   const [studioBusy, setStudioBusy] = useState(false);
   const [studioError, setStudioError] = useState("");
   const [studioFile, setStudioFile] = useState("index.html");
+  const [upgradeStatus, setUpgradeStatus] = useState("ابھی اپ ڈیٹ چیک نہیں کی گئی۔");
+  const [latestVersion, setLatestVersion] = useState("");
+  const [checkingUpgrade, setCheckingUpgrade] = useState(false);
+
+  async function checkForUpdates() {
+    if (checkingUpgrade) return;
+    setCheckingUpgrade(true);
+    setUpgradeStatus("نئی اپ ڈیٹ تلاش کی جا رہی ہے…");
+    try {
+      const response = await fetch("/app-version.json?check=" + Date.now(), { cache: "no-store" });
+      if (!response.ok) throw new Error("اپ ڈیٹ سرور سے رابطہ نہیں ہو سکا۔");
+      const manifest = await response.json();
+      if (!manifest.version) throw new Error("اپ ڈیٹ کی معلومات درست نہیں ہیں۔");
+      setLatestVersion(manifest.version);
+      let serviceWorkerUpdated = false;
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          await registration.update();
+          serviceWorkerUpdated = registration.waiting || registration.installing || registration.active;
+        }
+      }
+      if (manifest.version !== APP_VERSION) {
+        setUpgradeStatus("نیا ورژن " + manifest.version + " دستیاب ہے۔ ویب ایپ کی نئی فائلیں سرور پر شائع ہونے کے بعد ریفریش کریں۔");
+      } else if (serviceWorkerUpdated) {
+        setUpgradeStatus("آپ کا ورژن تازہ ترین ہے۔ سروس ورکر نے اپ ڈیٹ چیک کر لی ہے۔");
+      } else {
+        setUpgradeStatus("SHER AI تازہ ترین ورژن پر ہے۔");
+      }
+    } catch (error) {
+      setUpgradeStatus(error.message || "اپ ڈیٹ چیک نہیں ہو سکی۔ انٹرنیٹ کنکشن چیک کریں۔");
+    } finally {
+      setCheckingUpgrade(false);
+    }
+  }
+
+  function refreshUpdatedApp() {
+    window.location.reload();
+  }
 
   function next() {
     if (step === 0 && !idea.trim()) { setNotice("Please describe the app you want to create."); return; }
@@ -266,6 +306,7 @@ function AppContent({ accessToken, onSignOut }) {
       <button className={view === "builder" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("builder")}>▣ App Builder</button>
       <button className={view === "smart" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("smart")}>⚙ Smart Tools</button>
       <button className={view === "images" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("images")}>✧ Image Studio</button>
+      <button className={view === "upgrade" ? "workspace-tab active" : "workspace-tab"} onClick={() => setView("upgrade")}>⬆ Upgrade</button>
     </nav>
 
     {view === "chat" && <section className="chat-panel">
@@ -320,6 +361,28 @@ function AppContent({ accessToken, onSignOut }) {
     {view === "smart" && <section className="panel tool-panel"><div className="panel-icon">⚙</div><div className="kicker">PERSONAL PRODUCTIVITY</div><h2>اسمارٹ ٹولز</h2><div className="smart-card"><h3>تیز حساب کتاب</h3><p className="muted">جمع، تفریق، ضرب، تقسیم اور فیصد کے لیے۔</p><input value={calculator} onChange={e=>setCalculator(e.target.value)} dir="ltr" placeholder="مثلاً 1200 * 3"/><button className="primary" type="button" onClick={calculate}>حساب کریں</button>{calculatorResult && <p className="tool-result">نتیجہ: {calculatorResult}</p>}</div><div className="smart-card"><h3>تحریر، ترجمہ اور خلاصہ</h3><p className="muted">متن لکھیں اور SHER AI سے ترجمہ، اصلاح یا خلاصہ کروائیں۔</p><textarea rows="4" value={toolText} onChange={e=>setToolText(e.target.value)} placeholder="مثلاً اس عبارت کا اردو میں ترجمہ کریں..."/><div className="smart-actions"><button className="secondary" type="button" onClick={()=>setToolText("اس متن کا اردو میں ترجمہ کریں:\
 "+toolText)}>اردو ترجمہ</button><button className="secondary" type="button" onClick={()=>setToolText("اس تحریر کو بہتر اور پروفیشنل بنائیں:\
 "+toolText)}>تحریر بہتر کریں</button><button className="primary" type="button" disabled={toolBusy || !toolText.trim()} onClick={runSmartTool}>{toolBusy ? "کام ہو رہا ہے…" : "SHER AI سے پوچھیں"}</button></div>{toolResult && <div className="tool-result"><p>{toolResult}</p><button type="button" className="speak-button" onClick={()=>speakText(toolResult)}>🔊 جواب سنیں</button></div>}</div><div className="smart-card"><h3>App Builder</h3><p className="muted">تین مراحل والا ایپ بلڈر الگ ٹیب میں دستیاب ہے۔</p><button className="secondary" type="button" onClick={()=>{setView("builder");setStep(0);}}>App Builder کھولیں</button></div></section>}
+
+    {view === "upgrade" && <section className="panel tool-panel">
+      <div className="panel-icon">⬆</div>
+      <div className="kicker">SHER AI UPDATE CENTER</div>
+      <h2>خودکار اپ گریڈ سینٹر</h2>
+      <p className="muted">SHER AI نئی ویب اپ ڈیٹس چیک کرے گا۔ نئی APK دستیاب ہونے پر اسے Android کی اجازت کے ساتھ انسٹال کیا جا سکتا ہے۔</p>
+      <div className="smart-card">
+        <h3>موجودہ ورژن</h3>
+        <p className="tool-result" dir="ltr">v{APP_VERSION}</p>
+        <h3 style={{marginTop:"14px"}}>تازہ ترین دستیاب ورژن</h3>
+        <p className="tool-result" dir="ltr">{latestVersion ? "v" + latestVersion : "ابھی چیک نہیں کیا"}</p>
+        <button className="primary" type="button" disabled={checkingUpgrade} onClick={checkForUpdates}>{checkingUpgrade ? "چیک ہو رہا ہے…" : "ابھی اپ ڈیٹ چیک کریں"}</button>
+        <button className="secondary" type="button" style={{marginLeft:"8px"}} onClick={refreshUpdatedApp}>ایپ ریفریش کریں</button>
+        <p className="tool-result" role="status">{upgradeStatus}</p>
+      </div>
+      <div className="smart-card">
+        <h3>Android APK اپ ڈیٹ</h3>
+        <p className="muted">Android ایپ کی نئی APK یہاں سے حاصل کریں۔ انسٹالیشن آپ کی اجازت سے ہوگی؛ پرانی APK کو نئی APK سے اپ ڈیٹ کریں۔</p>
+        <a className="primary" href="https://github.com/alisher049/SHER-AI/actions" target="_blank" rel="noreferrer" style={{display:"inline-block",textDecoration:"none",marginTop:"8px",padding:"12px 16px",borderRadius:"10px"}}>نئی APK حاصل کریں</a>
+      </div>
+      <p className="chat-footnote">نوٹ: ویب/PWA ورژن سرور اور Service Worker کے ذریعے اپ ڈیٹ ہو سکتا ہے۔ Android APK کو خودکار طور پر خاموشی سے تبدیل نہیں کیا جا سکتا؛ نئی APK انسٹال کرنے کے لیے Android کی تصدیق ضروری ہے۔</p>
+    </section>}
 
     {view === "images" && <section className="panel tool-panel"><div className="panel-icon">✧</div><div className="kicker">SHER AI CREATIVE STUDIO</div><h2>AI تصویر بنائیں</h2><p className="muted">اردو یا English میں تصویر کی تفصیل لکھیں۔</p><label htmlFor="imagePrompt">تصویر کی تفصیل</label><textarea id="imagePrompt" rows="4" value={imagePrompt} onChange={e=>setImagePrompt(e.target.value)} placeholder="مثلاً برفیلے پہاڑوں کے درمیان ایک خوبصورت گھر، cinematic style..."/><button className="primary" type="button" disabled={!imagePrompt.trim() || imageLoading} onClick={generateImage}>{imageLoading ? "تصویر بن رہی ہے…" : "✧ تصویر بنائیں"}</button>{imageError && <div className="notice" role="alert">{imageError}</div>}{generatedImage && <div className="smart-card"><img src={generatedImage} alt="SHER AI سے تیار کردہ تصویر" style={{display:"block",width:"100%",height:"auto",borderRadius:"14px"}}/><a className="primary" href={generatedImage} download={generatedImage.startsWith("data:image/jpeg") ? "sher-ai-image.jpg" : "sher-ai-image.png"} style={{display:"inline-block",textDecoration:"none",marginTop:"12px"}}>تصویر ڈاؤن لوڈ کریں</a></div>}<p className="chat-footnote">تصویر بنانے کے لیے Vercel پر GEMINI_API_KEY اور Google AI image model کی دستیابی ضروری ہے۔ استعمال پر Google کی قیمت اور حدود لاگو ہو سکتی ہیں۔</p></section>}
 
