@@ -6,6 +6,8 @@ on:
     paths:
       - "src/**"
       - "api/**"
+      - "lib/server/**"
+      - "public/**"
       - "vercel.json"
       - "index.html"
       - "package.json"
@@ -27,7 +29,7 @@ jobs:
       - name: Build web app
         run: npm run build
         env:
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://sher-ai-swart.vercel.app' }}
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://hltlskzpwqrhiedmomfx.supabase.co' }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY || 'sb_publishable_EKo3T3p1J7vVYqMQdTN2oQ__Ig0O8N6' }}
       - run: npx cap add android
