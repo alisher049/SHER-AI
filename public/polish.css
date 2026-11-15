@@ -1,0 +1,36 @@
+/* SHER AI — polished responsive interface */
+:root{font-family:Inter,"Noto Sans Arabic",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#edf5ff;background:#070d19;font-synthesis:none;text-rendering:optimizeLegibility}
+body{background:radial-gradient(ellipse at 50% -18%,#193c62 0%,#0b1728 42%,#070d19 78%);min-height:100vh}
+button,input,textarea,select{font-family:inherit}
+.shell{width:min(100% - 36px,900px);padding:26px 0 36px}
+.topbar{position:sticky;top:0;z-index:20;margin:-8px -12px 0;padding:12px 14px;border:1px solid #ffffff16;border-radius:20px;background:#091526df;backdrop-filter:blur(18px);box-shadow:0 12px 35px #0003}
+.brand{gap:12px}.brain{font-size:0!important;color:transparent!important;background:url('/icons/sher-ai-mark.svg') center/contain no-repeat!important;border:0!important;border-radius:13px!important;width:48px!important;height:48px!important;box-shadow:0 0 24px #38bdf833}
+.brand strong{font-size:16px;letter-spacing:2.5px;color:#f5f9ff}.brand small{font-size:9px;letter-spacing:1.5px;color:#8ca9c8}
+.top-actions{gap:9px}.mode-button,.signout-button{border-radius:13px;padding:11px 14px;transition:transform .18s ease,border-color .18s ease,background .18s ease}.mode-button{background:linear-gradient(135deg,#153958,#10253c);border:1px solid #3a6d91;color:#b9eaff}.signout-button{background:#111f31;border-color:#31445c;color:#c6d5e6}
+button{transition:transform .18s ease,filter .18s ease}button:active{transform:scale(.98)}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #69d5ff;outline-offset:3px}
+.hero{padding:64px 8px 34px}.eyebrow,.kicker{color:#70d4ff;font-weight:800;letter-spacing:2px}.hero h1{font-size:clamp(42px,8vw,72px);line-height:1.02;letter-spacing:-3px;margin:18px 0 16px}.hero h1 span{background:linear-gradient(100deg,#71d9ff,#9b9aff 60%,#8ef0d0);background-clip:text;-webkit-background-clip:text;color:transparent}.hero p{font-size:15px;max-width:560px;color:#a9bbd1}
+.steps{gap:12px;margin:12px 0 22px;padding:12px 16px;border:1px solid #ffffff12;border-radius:18px;background:#0c1a2bd9}.step{gap:10px;font-size:12px;font-weight:700}.step b{width:32px;height:32px;border-radius:11px;background:#14253a;border-color:#344b66;color:#a9c1d8}.step.active b,.step.done b{background:linear-gradient(135deg,#1675a7,#235e86);border-color:#65d5ff;color:#fff;box-shadow:0 4px 18px #2bb8ee30}
+.panel,.chat-panel{border:1px solid #ffffff1b;border-radius:26px;background:linear-gradient(145deg,#132943f5,#0c1a2cf5);padding:clamp(22px,5vw,42px);box-shadow:0 26px 80px #0006, inset 0 1px #ffffff0b}
+.panel-icon{display:grid;place-items:center;width:48px;height:48px;border:1px solid #3b7798;border-radius:15px;background:linear-gradient(145deg,#173f5c,#10283f);color:#91e3ff;box-shadow:0 8px 24px #0003}
+.panel h2{font-size:clamp(24px,4vw,31px);letter-spacing:-.8px;margin:12px 0 9px}.muted{color:#a9bbd1;line-height:1.75}.panel .muted{max-width:620px}
+label{color:#dce9f7;font-size:13px;margin:22px 0 9px}
+textarea,input,select{border:1px solid #354e6b;border-radius:15px;background:#081626;color:#f1f7ff;padding:15px 16px;line-height:1.6;box-shadow:inset 0 1px 4px #0003;transition:border-color .2s,box-shadow .2s}
+textarea:focus,input:focus,select:focus{border-color:#63c9f4;box-shadow:0 0 0 4px #43b8ed18}
+textarea::placeholder,input::placeholder{color:#7189a3}
+.hint{color:#8ea6bf;line-height:1.6}
+.summary{border:1px solid #34506b;border-radius:16px;background:linear-gradient(145deg,#0a1a2b,#10243a);padding:18px}
+.summary b{color:#83dcff;letter-spacing:.3px}.summary p{color:#d0dceb}
+.notice{border-radius:14px;line-height:1.7}
+.actions{margin-top:30px;gap:12px}.actions button,.chat-form button,.auth-submit{border-radius:14px;padding:14px 21px;font-size:13px;font-weight:800}
+.primary{background:linear-gradient(105deg,#52c9f4,#83e3ce);color:#061524;box-shadow:0 9px 25px #43bfe833}.primary:hover{filter:brightness(1.08);transform:translateY(-1px)}.secondary{background:#203650;border:1px solid #3b5876;color:#e1efff}
+footer{padding:25px 8px 0;color:#8299b2}
+.chat-panel{margin-top:30px}.chat-heading{gap:16px}.chat-avatar{border-radius:16px;background:linear-gradient(140deg,#1b5479,#273b68);border:1px solid #4c88ad;box-shadow:0 8px 25px #0003}.chat-heading h1{letter-spacing:1px}.chat-messages{min-height:280px;padding:8px}.chat-welcome,.chat-bubble{border-radius:17px}.chat-welcome{background:#0b1b2d;border:1px dashed #42617e;padding:20px}.chat-bubble{padding:14px 17px;font-size:14px}.chat-bubble.user{background:linear-gradient(130deg,#155176,#19415e);border:1px solid #347ba2}.chat-bubble.assistant{background:#0a1929;border:1px solid #2c4763}
+.chat-form textarea{min-height:58px}.chat-footnote{color:#8ca2b9;line-height:1.7}
+.auth-shell{background:radial-gradient(ellipse at 50% 0%,#1b4569 0%,#0c192b 45%,#070d19 85%);padding:90px 18px 28px}
+.auth-card{width:min(100%,460px);border:1px solid #ffffff20;border-radius:28px;background:linear-gradient(145deg,#152d48fa,#0b192bfa);padding:clamp(25px,6vw,42px);box-shadow:0 28px 90px #0008,inset 0 1px #ffffff0b}
+.auth-brain{width:76px!important;height:76px!important;margin:0 auto 18px;border-radius:22px!important;box-shadow:0 0 36px #38bdf844}
+.auth-card h1{font-size:clamp(24px,5vw,30px);letter-spacing:-.5px}.auth-subtitle{font-size:14px;color:#b4c6d9}
+.auth-form{text-align:inherit}.auth-form label{font-size:13px}.auth-form input{min-height:50px}.auth-submit{min-height:52px;margin-top:24px}.text-button{font-size:12px}.auth-footnote{line-height:1.9;color:#91a8c0}
+.corner-tools{top:14px;right:14px}.corner-tool{border-radius:13px;background:#122b43;border-color:#3c6b8b;box-shadow:0 8px 22px #0005}.language-tool{font-weight:700}
+@media(max-width:600px){.shell{width:min(100% - 22px,900px);padding-top:14px}.topbar{margin:0;padding:10px;border-radius:17px}.brand{gap:8px}.brand .brain{width:42px!important;height:42px!important}.brand strong{font-size:14px}.brand small{font-size:8px;letter-spacing:1px}.top-actions{gap:6px}.mode-button,.signout-button{padding:9px 10px;font-size:10px}.hero{padding:48px 5px 25px}.hero h1{letter-spacing:-2px}.steps{gap:7px;padding:10px}.step{gap:6px;font-size:10px}.step b{width:27px;height:27px;border-radius:9px}.panel,.chat-panel{border-radius:21px;padding:21px 17px}.actions{margin-top:24px}.actions button{padding:13px 15px}.auth-shell{padding:78px 13px 20px}.auth-card{border-radius:23px}.chat-messages{min-height:220px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
