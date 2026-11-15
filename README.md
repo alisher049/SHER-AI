@@ -6,7 +6,7 @@ SHER AI is a mobile-first personal AI assistant and app-building workspace. It u
 
 - The app is restricted to the owner Gmail account configured in `src/App.jsx` and `lib/server/auth.js`.
 - Sign-in uses a Gmail address and a six-digit email verification code. No app password is requested.
-- Supabase handles OTP delivery and verification. In Supabase, enable the Email provider and configure **Authentication → Email Templates → Confirm signup** to include `{{ .Token }}` (not only `{{ .ConfirmationURL }}`). Confirm that email delivery/SMTP is configured.
+- Supabase handles OTP delivery and verification. In Supabase, enable the Email provider and configure **Authentication → Email Templates → Magic Link** to include `{{ .Token }}` (not only `{{ .ConfirmationURL }}`). `signInWithOtp` uses the Magic Link template. Confirm that email delivery/custom SMTP is configured.
 - The owner must verify the code in the app. Never share Gmail passwords, verification codes, service-role keys, or API secrets.
 - If the owner email changes, update both frontend and server-side owner checks together.
 
