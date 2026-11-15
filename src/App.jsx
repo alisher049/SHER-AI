@@ -63,20 +63,48 @@ function AppContent({ accessToken, onSignOut }) {
   async function attachImage(event) {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      setChatError("صرف JPG، PNG یا WEBP تصویر منتخب کریں۔"); event.target.value = ""; return;
+    if (!["image/jpeg", "image/png", "image/webp", "application/pdf"].includes(file.type)) {
+      setChatError("صرف JPG، PNG، WEBP تصویر یا PDF دستاویز منتخب کریں۔"); event.target.value = ""; return;
     }
-    if (file.size > 3 * 1024 * 1024) {
-      setChatError("تصویر 3 MB سے کم ہونی چاہیے۔"); event.target.value = ""; return;
+    if (file.size > 2.5 * 1024 * 1024) {
+      setChatError("فائل 2.5 MB سے کم ہونی چاہیے۔"); event.target.value = ""; return;
     }
     const reader = new FileReader();
     reader.onload = () => { setSelectedImage({ dataUrl: reader.result, mimeType: file.type, name: file.name }); setChatError(""); };
-    reader.onerror = () => setChatError("تصویر نہیں کھل سکی۔ دوبارہ کوشش کریں۔");
+    reader.onerror = () => setChatError("فائل نہیں کھل سکی۔ دوبارہ کوشش کریں۔");
     reader.readAsDataURL(file);
     event.target.value = "";
   }
 
-  function speakText(text) {\n    if (!("speechSynthesis" in window)) { setChatError("اس براؤزر میں آواز سے پڑھنے کی سہولت دستیاب نہیں۔"); return; }\n    window.speechSynthesis.cancel();\n    const utterance = new SpeechSynthesisUtterance(text);\n    utterance.lang = /[\\u0600-\\u06FF]/.test(text) ? "ur-PK" : "en-US";\n    window.speechSynthesis.speak(utterance);\n  }\n\n  async function runSmartTool() {\n    const text = toolText.trim();\n    if (!text || toolBusy) return;\n    setToolBusy(true); setToolResult("");\n    try {\n      const response = await fetch(API_BASE_URL + "/api/chat", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + accessToken }, body: JSON.stringify({ messages: [{ role: "user", content: text }] }) });\n      const result = await response.json().catch(() => ({}));\n      if (!response.ok) throw new Error(result.error || "AI tool request failed.");\n      setToolResult(result.answer || "کوئی جواب موصول نہیں ہوا۔");\n    } catch (error) { setToolResult(error.message || "درخواست مکمل نہیں ہو سکی۔"); }\n    finally { setToolBusy(false); }\n  }\n\n  function calculate() {\n    const expression = calculator.trim();\n    if (!expression || !/^[0-9+\\-*/().%\\s]+$/.test(expression)) { setCalculatorResult("صرف اعداد اور + − × ÷ ( ) استعمال کریں۔"); return; }\n    try { const value = Function("\\\"use strict\\\"; return (" + expression + ")")(); setCalculatorResult(Number.isFinite(value) ? String(value) : "درست حساب درج کریں۔"); }\n    catch { setCalculatorResult("حساب درست نہیں۔"); }\n  }\n\n  function startVoiceInput() {
+  function speakText(text) {
+    if (!("speechSynthesis" in window)) { setChatError("اس براؤزر میں آواز سے پڑھنے کی سہولت دستیاب نہیں۔"); return; }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = /[\\u0600-\\u06FF]/.test(text) ? "ur-PK" : "en-US";
+    window.speechSynthesis.speak(utterance);
+  }
+
+  async function runSmartTool() {
+    const text = toolText.trim();
+    if (!text || toolBusy) return;
+    setToolBusy(true); setToolResult("");
+    try {
+      const response = await fetch(API_BASE_URL + "/api/chat", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + accessToken }, body: JSON.stringify({ messages: [{ role: "user", content: text }] }) });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "AI tool request failed.");
+      setToolResult(result.answer || "کوئی جواب موصول نہیں ہوا۔");
+    } catch (error) { setToolResult(error.message || "درخواست مکمل نہیں ہو سکی۔"); }
+    finally { setToolBusy(false); }
+  }
+
+  function calculate() {
+    const expression = calculator.trim();
+    if (!expression || !/^[0-9+\\-*/().%\\s]+$/.test(expression)) { setCalculatorResult("صرف اعداد اور + − × ÷ ( ) استعمال کریں۔"); return; }
+    try { const value = Function("\\\"use strict\\\"; return (" + expression + ")")(); setCalculatorResult(Number.isFinite(value) ? String(value) : "درست حساب درج کریں۔"); }
+    catch { setCalculatorResult("حساب درست نہیں۔"); }
+  }
+
+  function startVoiceInput() {
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Speech) { setChatError("آپ کے براؤزر میں voice typing دستیاب نہیں۔ Chrome میں دوبارہ کوشش کریں۔"); return; }
     const recognition = new Speech();
@@ -163,7 +191,11 @@ function AppContent({ accessToken, onSignOut }) {
       </section>
     </>}
 
-    {view === "smart" && <section className="panel tool-panel"><div className="panel-icon">⚙</div><div className="kicker">PERSONAL PRODUCTIVITY</div><h2>اسمارٹ ٹولز</h2><div className="smart-card"><h3>تیز حساب کتاب</h3><p className="muted">جمع، تفریق، ضرب، تقسیم اور فیصد کے لیے۔</p><input value={calculator} onChange={e=>setCalculator(e.target.value)} dir="ltr" placeholder="مثلاً 1200 * 3"/><button className="primary" type="button" onClick={calculate}>حساب کریں</button>{calculatorResult && <p className="tool-result">نتیجہ: {calculatorResult}</p>}</div><div className="smart-card"><h3>تحریر، ترجمہ اور خلاصہ</h3><p className="muted">متن لکھیں اور SHER AI سے ترجمہ، اصلاح یا خلاصہ کروائیں۔</p><textarea rows="4" value={toolText} onChange={e=>setToolText(e.target.value)} placeholder="مثلاً اس عبارت کا اردو میں ترجمہ کریں..."/><div className="smart-actions"><button className="secondary" type="button" onClick={()=>setToolText("اس متن کا اردو میں ترجمہ کریں:\\n"+toolText)}>اردو ترجمہ</button><button className="secondary" type="button" onClick={()=>setToolText("اس تحریر کو بہتر اور پروفیشنل بنائیں:\\n"+toolText)}>تحریر بہتر کریں</button><button className="primary" type="button" disabled={toolBusy || !toolText.trim()} onClick={runSmartTool}>{toolBusy ? "کام ہو رہا ہے…" : "SHER AI سے پوچھیں"}</button></div>{toolResult && <div className="tool-result"><p>{toolResult}</p><button type="button" className="speak-button" onClick={()=>speakText(toolResult)}>🔊 جواب سنیں</button></div>}</div><div className="smart-card"><h3>App Builder</h3><p className="muted">تین مراحل والا ایپ بلڈر الگ ٹیب میں دستیاب ہے۔</p><button className="secondary" type="button" onClick={()=>{setView("builder");setStep(0);}}>App Builder کھولیں</button></div></section>}\n\n    {view === "images" && <section className="panel tool-panel"><div className="panel-icon">✧</div><div className="kicker">SHER AI CREATIVE STUDIO</div><h2>Image Generator</h2><p className="muted">اپنی مطلوبہ تصویر کی تفصیل لکھیں۔</p><label htmlFor="imagePrompt">تصویر کی تفصیل</label><textarea id="imagePrompt" rows="4" value={imagePrompt} onChange={e=>setImagePrompt(e.target.value)} placeholder="مثلاً برفیلے پہاڑوں کے درمیان ایک خوبصورت گھر، cinematic style..."/><div className="notice">Image Generator کا انٹرفیس شامل ہے، لیکن تصویر بنانے کا API ابھی اس GitHub پروجیکٹ میں موجود نہیں۔ اسے فعال کرنے کے لیے الگ image-generation backend اور model کی ترتیب درکار ہے۔</div><button className="primary" type="button" disabled={!imagePrompt.trim()}>تصویر بنائیں — جلد دستیاب ہوگا</button></section>}
+    {view === "smart" && <section className="panel tool-panel"><div className="panel-icon">⚙</div><div className="kicker">PERSONAL PRODUCTIVITY</div><h2>اسمارٹ ٹولز</h2><div className="smart-card"><h3>تیز حساب کتاب</h3><p className="muted">جمع، تفریق، ضرب، تقسیم اور فیصد کے لیے۔</p><input value={calculator} onChange={e=>setCalculator(e.target.value)} dir="ltr" placeholder="مثلاً 1200 * 3"/><button className="primary" type="button" onClick={calculate}>حساب کریں</button>{calculatorResult && <p className="tool-result">نتیجہ: {calculatorResult}</p>}</div><div className="smart-card"><h3>تحریر، ترجمہ اور خلاصہ</h3><p className="muted">متن لکھیں اور SHER AI سے ترجمہ، اصلاح یا خلاصہ کروائیں۔</p><textarea rows="4" value={toolText} onChange={e=>setToolText(e.target.value)} placeholder="مثلاً اس عبارت کا اردو میں ترجمہ کریں..."/><div className="smart-actions"><button className="secondary" type="button" onClick={()=>setToolText("اس متن کا اردو میں ترجمہ کریں:\
+"+toolText)}>اردو ترجمہ</button><button className="secondary" type="button" onClick={()=>setToolText("اس تحریر کو بہتر اور پروفیشنل بنائیں:\
+"+toolText)}>تحریر بہتر کریں</button><button className="primary" type="button" disabled={toolBusy || !toolText.trim()} onClick={runSmartTool}>{toolBusy ? "کام ہو رہا ہے…" : "SHER AI سے پوچھیں"}</button></div>{toolResult && <div className="tool-result"><p>{toolResult}</p><button type="button" className="speak-button" onClick={()=>speakText(toolResult)}>🔊 جواب سنیں</button></div>}</div><div className="smart-card"><h3>App Builder</h3><p className="muted">تین مراحل والا ایپ بلڈر الگ ٹیب میں دستیاب ہے۔</p><button className="secondary" type="button" onClick={()=>{setView("builder");setStep(0);}}>App Builder کھولیں</button></div></section>}
+
+    {view === "images" && <section className="panel tool-panel"><div className="panel-icon">✧</div><div className="kicker">SHER AI CREATIVE STUDIO</div><h2>Image Generator</h2><p className="muted">اپنی مطلوبہ تصویر کی تفصیل لکھیں۔</p><label htmlFor="imagePrompt">تصویر کی تفصیل</label><textarea id="imagePrompt" rows="4" value={imagePrompt} onChange={e=>setImagePrompt(e.target.value)} placeholder="مثلاً برفیلے پہاڑوں کے درمیان ایک خوبصورت گھر، cinematic style..."/><div className="notice">Image Generator کا انٹرفیس شامل ہے، لیکن تصویر بنانے کا API ابھی اس GitHub پروجیکٹ میں موجود نہیں۔ اسے فعال کرنے کے لیے الگ image-generation backend اور model کی ترتیب درکار ہے۔</div><button className="primary" type="button" disabled={!imagePrompt.trim()}>تصویر بنائیں — جلد دستیاب ہوگا</button></section>}
 
     <footer><span>SHER AI</span><span>آپ کا اپنا AI اسسٹنٹ</span></footer>
   </main>;
