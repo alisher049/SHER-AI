@@ -74,7 +74,7 @@ function AppContent({ accessToken, onSignOut }) {
     const cssPath = Object.keys(files).find(path => path === directory + "styles.css" || path === "styles.css" || path.endsWith("/styles.css"));
     const jsPath = Object.keys(files).find(path => path === directory + "app.js" || path === "app.js" || path.endsWith("/app.js"));
     if (cssPath) {
-      const css = files[cssPath].replace(/<\/style/gi, "</style");
+      const css = files[cssPath].replace(/<\/style/gi, "<\\/style");
       if (/<\/head>/i.test(html)) html = html.replace(/<\/head>/i, "<style>" + css + "</style></head>");
       else html = "<style>" + css + "</style>" + html;
       html = html.replace(/<link\b[^>]*href=["'][^"']*styles\.css[^"']*["'][^>]*>/gi, "");
@@ -83,7 +83,7 @@ function AppContent({ accessToken, onSignOut }) {
       const js = files[jsPath].replace(/<\/script/gi, "<\\/script");
       const scriptTag = /<script\b[^>]*src=["'][^"']*app\.js[^"']*["'][^>]*>\s*<\/script>/i;
       if (scriptTag.test(html)) html = html.replace(scriptTag, "<script>" + js + "</script>");
-      else html = html.replace(/<\/body>/i, "<script>" + js + "<\\/script></body>");
+      else html = html.replace(/<\/body>/i, "<script>" + js + "</script></body>");
     }
     return html;
   }
