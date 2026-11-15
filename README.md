@@ -29,7 +29,7 @@ Set these in Vercel → Project → Settings → Environment Variables, then red
 
 - `GEMINI_API_KEY` — server-only Google Gemini API key.
 - `GEMINI_MODEL` — optional text model override (default: `gemini-3.8-flash`).
-- `GEMINI_IMAGE_MODEL` — optional image model override (default: `gemini-nano-banana-2.1`).
+- `GEMINI_IMAGE_MODEL` — optional image model override (default: `gemini-3.1-flash-image`).
 - `SUPABASE_URL` and `SUPABASE_ANON_KEY` — server-side Supabase public project configuration.
 - `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` — frontend Supabase public project configuration.
 - `VITE_API_BASE_URL` — optional deployed API base URL for Android/web builds.
