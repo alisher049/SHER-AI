@@ -35,3 +35,15 @@
 .tool-panel>.primary:disabled{opacity:.55;cursor:not-allowed}
 @keyframes mic-pulse{50%{box-shadow:0 0 0 6px #b75d7033}}
 @media(max-width:480px){.workspace-tabs{gap:4px}.workspace-tab{padding:11px 9px;font-size:10px}.chat-panel{padding:15px}.chat-composer{gap:6px;padding:7px}.tool-icon,.send-button{flex-basis:36px;width:36px;height:36px}.chat-footnote{font-size:9px}}
+
+/* Smart tools, PDF attachments and speech playback */
+.pdf-icon{display:grid;place-items:center;width:52px;height:52px;border-radius:8px;background:#562c39;color:#ffd5dc;font-weight:800}
+.speak-button{display:inline-flex;align-items:center;gap:5px;margin-top:9px;border:1px solid #35516b;border-radius:9px;padding:6px 9px;background:#10263a;color:#b9e7fa;font-size:11px;cursor:pointer}
+.smart-card{margin-top:18px;padding:17px;border:1px solid #2c425c;border-radius:15px;background:#0b1929}
+.smart-card h3{margin:0 0 8px;color:#cdefff;font-size:17px}
+.smart-card .muted{margin-bottom:12px}
+.smart-card>.primary,.smart-card>.secondary{margin-top:10px;border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+.smart-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.smart-actions button{border-radius:10px;padding:10px 12px;font-size:11px}
+.tool-result{margin-top:12px;padding:13px;border:1px solid #35516b;border-radius:11px;background:#10263a;color:#dceaf5;font-size:13px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.tool-result p{margin:0}
