@@ -1,10 +1,11 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "name": "SHER AI",
   "releasedAt": "2026-11-15",
   "features": [
-    "Upgrade Center",
-    "PWA service worker cache refresh",
-    "Manual Android APK update guidance"
+    "Automatic update check on app launch, every 15 minutes, and when app regains focus",
+    "Update available prompt with APK build/download link",
+    "Manual Android APK installation with user approval",
+    "PWA service worker update check"
   ]
 }
