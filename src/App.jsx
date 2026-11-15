@@ -23,6 +23,9 @@ function AppContent({ accessToken, onSignOut }) {
   const [calculatorResult, setCalculatorResult] = useState("");
   const [listening, setListening] = useState(false);
   const [imagePrompt, setImagePrompt] = useState("");
+  const [imageLoading, setImageLoading] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState("");
+  const [imageError, setImageError] = useState("");
   const [generating, setGenerating] = useState(false);
   const [studioPrompt, setStudioPrompt] = useState("");
   const [studioFiles, setStudioFiles] = useState(null);
@@ -200,6 +203,25 @@ function AppContent({ accessToken, onSignOut }) {
     recognition.start();
   }
 
+  async function generateImage() {
+    const prompt = imagePrompt.trim();
+    if (!prompt || imageLoading) return;
+    setImageLoading(true); setImageError(""); setGeneratedImage("");
+    try {
+      const response = await fetch(API_BASE_URL + "/api/image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + accessToken },
+        body: JSON.stringify({ prompt })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "تصویر تیار نہیں ہو سکی۔");
+      if (!result.image || !result.mimeType) throw new Error("AI سے تصویر موصول نہیں ہوئی۔");
+      setGeneratedImage("data:" + result.mimeType + ";base64," + result.image);
+    } catch (error) {
+      setImageError(error.message || "تصویر بنانے کی درخواست مکمل نہیں ہو سکی۔");
+    } finally { setImageLoading(false); }
+  }
+
   async function sendChat(event) {
     event.preventDefault();
     const text = chatInput.trim();
@@ -294,7 +316,7 @@ function AppContent({ accessToken, onSignOut }) {
 "+toolText)}>اردو ترجمہ</button><button className="secondary" type="button" onClick={()=>setToolText("اس تحریر کو بہتر اور پروفیشنل بنائیں:\
 "+toolText)}>تحریر بہتر کریں</button><button className="primary" type="button" disabled={toolBusy || !toolText.trim()} onClick={runSmartTool}>{toolBusy ? "کام ہو رہا ہے…" : "SHER AI سے پوچھیں"}</button></div>{toolResult && <div className="tool-result"><p>{toolResult}</p><button type="button" className="speak-button" onClick={()=>speakText(toolResult)}>🔊 جواب سنیں</button></div>}</div><div className="smart-card"><h3>App Builder</h3><p className="muted">تین مراحل والا ایپ بلڈر الگ ٹیب میں دستیاب ہے۔</p><button className="secondary" type="button" onClick={()=>{setView("builder");setStep(0);}}>App Builder کھولیں</button></div></section>}
 
-    {view === "images" && <section className="panel tool-panel"><div className="panel-icon">✧</div><div className="kicker">SHER AI CREATIVE STUDIO</div><h2>Image Generator</h2><p className="muted">اپنی مطلوبہ تصویر کی تفصیل لکھیں۔</p><label htmlFor="imagePrompt">تصویر کی تفصیل</label><textarea id="imagePrompt" rows="4" value={imagePrompt} onChange={e=>setImagePrompt(e.target.value)} placeholder="مثلاً برفیلے پہاڑوں کے درمیان ایک خوبصورت گھر، cinematic style..."/><div className="notice">Image Generator کا انٹرفیس شامل ہے، لیکن تصویر بنانے کا API ابھی اس GitHub پروجیکٹ میں موجود نہیں۔ اسے فعال کرنے کے لیے الگ image-generation backend اور model کی ترتیب درکار ہے۔</div><button className="primary" type="button" disabled={!imagePrompt.trim()}>تصویر بنائیں — جلد دستیاب ہوگا</button></section>}
+    {view === "images" && <section className="panel tool-panel"><div className="panel-icon">✧</div><div className="kicker">SHER AI CREATIVE STUDIO</div><h2>AI تصویر بنائیں</h2><p className="muted">اردو یا English میں تصویر کی تفصیل لکھیں۔</p><label htmlFor="imagePrompt">تصویر کی تفصیل</label><textarea id="imagePrompt" rows="4" value={imagePrompt} onChange={e=>setImagePrompt(e.target.value)} placeholder="مثلاً برفیلے پہاڑوں کے درمیان ایک خوبصورت گھر، cinematic style..."/><button className="primary" type="button" disabled={!imagePrompt.trim() || imageLoading} onClick={generateImage}>{imageLoading ? "تصویر بن رہی ہے…" : "✧ تصویر بنائیں"}</button>{imageError && <div className="notice" role="alert">{imageError}</div>}{generatedImage && <div className="smart-card"><img src={generatedImage} alt="SHER AI سے تیار کردہ تصویر" style={{display:"block",width:"100%",height:"auto",borderRadius:"14px"}}/><a className="primary" href={generatedImage} download="sher-ai-image.png" style={{display:"inline-block",textDecoration:"none",marginTop:"12px"}}>تصویر ڈاؤن لوڈ کریں</a></div>}<p className="chat-footnote">تصویر بنانے کے لیے Vercel پر GEMINI_API_KEY اور Google AI image model کی دستیابی ضروری ہے۔ استعمال پر Google کی قیمت اور حدود لاگو ہو سکتی ہیں۔</p></section>}
 
     <footer><span>SHER AI</span><span>آپ کا اپنا AI اسسٹنٹ</span></footer>
   </main>;
