@@ -28,21 +28,26 @@ export default async function handler(req, res) {
     return json(res, 503, { error: "تصویر بنانے کی سہولت فعال کرنے کے لیے Vercel میں GEMINI_API_KEY شامل کرکے دوبارہ Deploy کریں۔" });
   }
 
-  const model = process.env.GEMINI_IMAGE_MODEL || "gemini-nano-banana-2.1";
+  // Use the documented generateContent image response path for reliable REST output parsing.
+  const model = process.env.GEMINI_IMAGE_MODEL || "gemini-3.1-flash-image";
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/interactions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
-        "Api-Revision": "2026-05-20"
-      },
-      body: JSON.stringify({
-        model,
-        input: "Generate one high-quality image from this description. Return the image, not only a description. Prompt: " + prompt.trim(),
-        response_format: { type: "image", mime_type: "image/jpeg", aspect_ratio: "1:1", image_size: "1K" }
-      })
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey
+        },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: "Generate one high-quality image from this description. Return an image. Prompt: " + prompt.trim() }] }],
+          generationConfig: {
+            responseModalities: ["IMAGE"],
+            imageConfig: { aspectRatio: "1:1", imageSize: "1K" }
+          }
+        })
+      }
+    );
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -50,17 +55,16 @@ export default async function handler(req, res) {
       return json(res, response.status === 429 ? 429 : 502, { error: message });
     }
 
-    const imagePart = data.output_image || (data.steps || []).flatMap(step => step.content || []).find(part => part.type === "image" && part.data);
-    const imageData = imagePart?.data;
-    const mimeType = imagePart?.mime_type || "image/jpeg";
+    const parts = (data.candidates || []).flatMap(candidate => candidate.content?.parts || []);
+    const imagePart = parts.find(part => part.inlineData?.data || part.inline_data?.data);
+    const imageData = imagePart?.inlineData?.data || imagePart?.inline_data?.data;
+    const mimeType = imagePart?.inlineData?.mimeType || imagePart?.inline_data?.mime_type || "image/jpeg";
     if (!imageData || !/^image\/(png|jpeg|webp)$/.test(mimeType)) {
-      return json(res, 502, { error: "AI نے تصویر واپس نہیں کی۔ ماڈل، اکاؤنٹ کی دستیابی اور Google API کی حدود چیک کریں۔" });
+      const reason = data.candidates?.[0]?.finishReason;
+      return json(res, 502, { error: reason ? "Google نے تصویر مکمل نہیں کی (" + reason + ")۔ مختلف تفصیل کے ساتھ دوبارہ کوشش کریں۔" : "AI نے تصویر واپس نہیں کی۔ ماڈل، اکاؤنٹ کی دستیابی اور Google API کی حدود چیک کریں۔" });
     }
 
-    return json(res, 200, {
-      image: imageData,
-      mimeType
-    });
+    return json(res, 200, { image: imageData, mimeType });
   } catch {
     return json(res, 502, { error: "تصویر بنانے والے سرور سے رابطہ نہیں ہو سکا۔ دوبارہ کوشش کریں۔" });
   }
